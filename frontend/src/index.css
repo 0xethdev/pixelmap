@@ -1,0 +1,30 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+html,
+body,
+#root,
+.app {
+  height: 100%;
+  background-color: #0F0F0F;
+}
+
+@font-face {
+  font-family: "Array";
+  src: url("../fonts/array-fonts/Array-Regular.ttf");
+}
+@font-face {
+  font-family: "Connection";
+  src: url("../fonts/Connection.otf");
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+

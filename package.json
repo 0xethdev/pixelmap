@@ -1,0 +1,23 @@
+{
+  "name": "pixelmap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomiclabs/hardhat-etherscan": "^3.1.8",
+    "hardhat": "^2.19.4"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
+    "chai": "^4.3.10",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.1"
+  }
+}
