@@ -45,7 +45,7 @@ const Canvas = ({ setInitialLoading }) => {
     }
 
     return (
-        <div className='flex gap-10 pt-12 pb-10'>
+        <div className='flex gap-10 pt-6 pb-10'>
             <div className='flex flex-col w-1/5 ml-10'>
                 <SideBar selectedPixels={selectedPixels} removePixel={removePixel} setSelectedPixels={setSelectedPixels}/>
             </div>

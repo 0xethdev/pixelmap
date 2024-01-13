@@ -290,7 +290,7 @@ contract Pixelmap {
 
     // Function to generate the complete SVG grid based on single row SVGs
     function generateSVG() public view returns (string memory) {
-        string memory svgString = '<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg">';
+        string memory svgString = '<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">';
         
         for (uint i = 0; i < 64; i++) {
             svgString = string(abi.encodePacked(svgString, rowSVGs[i]));

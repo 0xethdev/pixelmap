@@ -8,6 +8,7 @@ import { UserBalanceProvider } from './components/UserBalanceContext'
 import NavBar from './components/NavBar'
 import Canvas from './components/Canvas'
 import Info from './components/Info'
+import Banner from "./components/Banner";
 
 function App() {
   const[selectedPage, setSelectedPage] = useState("Canvas");
@@ -44,6 +45,7 @@ function App() {
           <PixelProvider>
               <main className="app">
                 <NavBar selectedPage = {selectedPage} setSelectedPage = {setSelectedPage} isInitialLoading={isInitialLoading}/>
+                <Banner />
                 <Routes>
                   <Route exact path="/" element={<Canvas setInitialLoading={setInitialLoading} />}/>
                   <Route exact path="/Info" element={<Info />}/>

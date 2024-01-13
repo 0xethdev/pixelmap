@@ -32,12 +32,12 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
     },[isConnected]);
 
     const renderShape = (shapeID, color) => {
-        const size = 12; // Size of the shape to be rendered in the sidebar
+        const size = 12;
         const x = 0;
         const y = 0;
 
         return (
-            <svg width={size} height={size} className="shape-preview">
+            <svg width={size} height={size} viewBox="0 0 14 14">
                 {createShape(null, shapeID, size, size, x, y, color)}
             </svg>
         );
@@ -98,14 +98,17 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
             <div className='flex justify-between items-center p-2 border-b-2 border-darkgrey'>
                 <div className='text-md'>TOTAL COST: {(Math.round(Utils.formatEther(BigInt(totalPrice))*100)/100).toString()} ETH</div>
                 <button 
-                    className={`text-xs py-1 px-2 border-2 
+                    className={`text-xs py-1 px-2 border-2 flex items-center justify-between gap-2
                                 ${isConnected && Number(Utils.formatEther(totalPrice.toString())) < Number(tokenBalance) ? 'bg-black text-lightgrey border-darkgrey' : 'bg-darkgrey text-white border-darkgrey'} 
                                 ${!isConnected || Number(Utils.formatEther(totalPrice.toString())) > Number(tokenBalance) && 'cursor-not-allowed'}`} 
                     disabled={!isConnected || approvalLoad || buyLoad || Number(Utils.formatEther(totalPrice.toString())) > Number(tokenBalance) }
                     onClick={() => handlePixelPurchase()}
                 >
+                <span>
                     {approvalLoad || buyLoad ? 'Processing...' : 
                     Number(Utils.formatEther(totalPrice.toString())) > Number(tokenBalance) ? 'Not Enough wETH' : 'Buy Pixels' }
+                </span>
+                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M15 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2v-2h2v2H9zm-2 2v-2h2v2H7zm-2 0h2v2H5v-2zm-2-2h2v2H3v-2zm0 0H1v-2h2v2zm8 2h2v2h-2v-2zm4-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2h-2v2h2V8zm0 0h2V6h-2v2z" fill="currentColor"/> </svg>
                 </button>
             </div>
             <div className='hide-scrollbar max-h-[500px] overflow-y-auto'>
@@ -118,7 +121,9 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
                         </div>
                     </div>
                     <div className='text-sm'>{(Math.round(Utils.formatEther(BigInt(pixel.price))*100)/100).toString()} ETH</div>
-                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2' onClick={() => removePixel(index)}>Remove</button>
+                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 flex items-center justify-between' onClick={() => removePixel(index)}>
+                        <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M16 2v4h6v2h-2v14H4V8H2V6h6V2h8zm-2 2h-4v2h4V4zm0 4H6v12h12V8h-4zm-5 2h2v8H9v-8zm6 0h-2v8h2v-8z" fill="currentColor"/> </svg>
+                    </button>
                 </div>
             ))}
             </div>

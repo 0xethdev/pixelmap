@@ -3,6 +3,7 @@ import { Utils } from 'alchemy-sdk'
 import { useState, useEffect } from 'react';
 import { createShape } from '../assets/gridShapes';
 import { useAccount } from 'wagmi'
+import { motion } from 'framer-motion'
 
 const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
@@ -42,18 +43,18 @@ const HoverCard = ({ pixelInfo }) => {
                 <div className='flex flex-col justify-between h-full'>
                     <div className='flex flex-row h-[40px] border-b-2 border-darkgrey'>
                         <div className='flex justify-end flex-col w-1/2'>
-                            <p className='text-lg text-white'>{pixelInfo.x} x {pixelInfo.y}</p>
+                            <p className='text-lg text-white'>{pixelInfo.x} <span className='text-darkgrey text-xl'>x</span> {pixelInfo.y}</p>
                         </div>
                         <div className='flex flex-col w-1/2 justify-center items-end'>
                             {renderShape(Number(pixelInfo.shapeID), pixelInfo.color)}
                         </div>
                     </div>
                     <div className='flex flex-row items-center h-[30px]'>
-                        <p className="text-xs text-white">owned by {truncateAddress(pixelInfo.owner)}</p>
+                        <p className="text-xs text-white"><span className='text-darkgrey text-xs'>owned by</span> {truncateAddress(pixelInfo.owner)}</p>
                     </div>
                     <div className='flex flex-row justify-between items-center h-[30px]'>
-                        <p className='text-md text-white'>price: {Math.round(Utils.formatEther(pixelInfo.price)*100)/100}</p>
-                        <p className='text-xs text-white'>royalties last paid: {formatDate(pixelInfo.royaltyLastPaid)}</p>
+                        <p className='text-md text-white'><span className='text-darkgrey text-xs'>price:</span> {Math.round(Utils.formatEther(pixelInfo.price)*100)/100}</p>
+                        <p className='text-xs text-white'><span className='text-darkgrey text-xs'>royalties last paid:</span> {formatDate(pixelInfo.royaltyLastPaid)}</p>
                     </div>
                 </div>
             ) : (
@@ -140,6 +141,10 @@ const GeneralInfo = ({ pixels }) => {
 const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
     const [hoveredPixel, setHoveredPixel] = useState(null);
     const { address, isConnected } = useAccount();
+    const [searchInputX, setSearchInputX] = useState('');
+    const [searchInputY, setSearchInputY] = useState('');
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     
     const squareSize = 8; // Size of each square
     const gap = 1; // Gap between squares
@@ -147,12 +152,72 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
     const handleMouseOver = (e, pixel) => {
         setHoveredPixel(pixel);
     };
+
+    const handleInputX = (e) => {
+        let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
+        setSearchInputX(newValue);
+    }
+    const handleInputY = (e) => {
+        let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
+        setSearchInputY(newValue);
+    }
+    const handleSerachClick = () => {
+        const foundPixel = grid.find(pixel => {
+            const pixelX = pixel.x;
+            const pixelY = pixel.y;
+            return pixelX === searchInputX && pixelY === searchInputY;
+        });
+        if (foundPixel) {
+            handlePixelClick(foundPixel);
+            setSearchInputX('');
+            setSearchInputY('');
+        }
+    }
+
+    useEffect(() => {
+        if (searchInputX !== '' && searchInputY !== '') {
+            setIsAnimating(true);
+        } else {
+            setIsAnimating(false);
+        }
+    }, [searchInputX, searchInputY]);
+
+    
+    const animationSettingsSearchButton = isAnimating && !isHovered ? {
+        y: [0, -2, 0],
+        transition: {
+            repeat: Infinity,
+            repeatType: "reverse",
+            duration: 1
+        }
+    }:{};
     
     return (
         <div className='flex flex-col items-center'>
             <GeneralInfo pixels={grid} />
-            <div className='relative mt-1'>
-                <svg width="600" height="600" className="canvas-svg"
+            <div className='flex flex-row justify-between items-center w-[576px] mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey my-2 py-1 px-2'>
+                <span className='w-1/5' >pixel search</span>
+                <div className='flex flex-row justify-center items-center'>
+                    <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputX} onChange={(e) => handleInputX(e)} min="0" max="63" placeholder="X: 0-63"/>
+                    <span className='text-darkgrey text-md'> x </span>
+                    <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputY} onChange={(e) => handleInputY(e)} min="0" max="63" placeholder="Y: 0-63"/>
+                </div>
+                <motion.button
+                    className={`${!isAnimating && 'cursor-not-allowed'} w-1/5`}
+                    onClick={() => handleSerachClick()}
+                    animate={isAnimating ? animationSettingsSearchButton : {}}
+                >
+                    <motion.svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        whileHover={isAnimating ? { scale: 1.1}:{}}
+                    >
+                        <path d="M6 2h8v2H6V2zM4 6V4h2v2H4zm0 8H2V6h2v8zm2 2H4v-2h2v2zm8 0v2H6v-2h8zm2-2h-2v2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm0-8h2v8h-2V6zm0 0V4h-2v2h2z" fill="currentColor"/>
+                    </motion.svg>
+                </motion.button>
+            </div>
+            <div className='relative'>
+                <svg width="600" height="600" className="canvas-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"
                 onMouseLeave={() => setHoveredPixel(null)}>
                     {grid.map((pixel, i) => {
                         

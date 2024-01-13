@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import SpinningLoader from  '../assets/spinningLoader'
 import { useAccount, useContractWrite } from 'wagmi'
 import { ethers } from 'ethers';
 import { Utils } from 'alchemy-sdk'
@@ -38,7 +39,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
         const y = 0;
 
         return (
-            <svg width={size} height={size} className="shape-preview">
+            <svg width={size} height={size} viewBox="0 0 14 14">
                 {createShape(null, shapeID, size, size, x, y, color)}
             </svg>
         );
@@ -310,7 +311,11 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
         <div className='flex flex-col w-[100%] p-2 text-white font-connection border-2 border-darkgrey bg-offblack'>
             <div className='flex flex-row justify-end items-center pb-2 border-darkgrey'>
                 <button className={`border-2 py-1 px-2 text-xs ${!filterActive ? ' text-black bg-lightgrey border-darkgrey' : 'bg-black text-lightgrey border-darkgrey'}`} onClick={() => setFilterActive(!filterActive)}>
-                    {!filterActive ? 'Filter' : 'Remove Filter'}
+                    {!filterActive ?
+                    <svg className="h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M4 5h16v2H4V5zm0 12H2V7h2v10zm16 0v2H4v-2h16zm0 0h2V7h-2v10zM10 9H6v6h4V9z" fill="0F0F0F"/> </svg>
+                    :
+                    <svg className="h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M4 5h16v2H4V5zm0 12H2V7h2v10zm16 0v2H4v-2h16zm0 0h2V7h-2v10zm-2-8h-4v6h4V9z" fill="#EBEBEB"/> </svg>
+                    }
                 </button>
             </div> 
             {setPixelData && (
@@ -345,7 +350,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                         {regex.test(colorInput[index]) ? 
                             <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M9 2h2v2H9V2zm4 4V4h-2v2H9v2H7v2H5v2H3v2h2v2h2v2h2v2h2v2h2v-2h2v-2h2v-2h2v6h2V12h-2v-2h-2V8h-2V6h-2zm0 0v2h2v2h2v2h2v2H5v-2h2v-2h2V8h2V6h2z" fill='#EBEBEB'/> </svg>
                             : 
-                            <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h16v2H5v14h14v2H3V3zm18 0h-2v18h2V3zM11 15h2v2h-2v-2zm2-8h-2v6h2V7z" fill='#EBEBEB'/> </svg> 
+                            <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M13 1h-2v2H9v2H7v2H5v2H3v2H1v2h2v2h2v2h2v2h2v2h2v2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h-2V9h-2V7h-2V5h-2V3h-2V1zm0 2v2h2v2h2v2h2v2h2v2h-2v2h-2v2h-2v2h-2v2h-2v-2H9v-2H7v-2H5v-2H3v-2h2V9h2V7h2V5h2V3h2zm0 4h-2v6h2V7zm0 8h-2v2h2v-2z" fill='#EBEBEB'/> </svg>
                         }
                             <input type="text" value={colorInput[index]} onChange={(e) =>handleColorInput(e, index)} placeholder={selectedColor[index]} className='bg-offblack text-lightgrey text-right border-b-2 max-w-[100px]' />
                         </div>
@@ -354,12 +359,31 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                 </div>
                 <div className='flex flex-col justify-between pt-2 border-t-2 border-darkgrey'>
                     <div className='flex flex-row justify-between items-center'>
-                        <button className='text-xs bg-black text-lightgrey border-darkgrey border-2 py-1 px-2 w-full' onClick={() => handlePixelModification()}>Cancel Update</button>
-                        <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 w-full' 
+                        <button className='text-xs bg-black text-lightgrey border-darkgrey border-2 py-1 px-2 w-full flex items-center justify-between' onClick={() => handlePixelModification()}
+                        >
+                            <span>
+                                Cancel Update
+                            </span>
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 w-full flex items-center justify-between' 
                             disabled={ fillPixelLoad }
                             onClick={() => handlePixelFill()}
                         >
-                            {fillPixelLoad ? 'Processing...' : 'Confirm Update' }
+                            <span>
+                                {fillPixelLoad ? 'Processing...' : 'Confirm Update' }
+                            </span>
+                            {fillPixelLoad ?
+                                <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
+                            : 
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M18 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2h2v-2h-2v2zm-2 2h2v-2h-2v2zm-2 0v2h2v-2H8zm-2-2h2v2H6v-2zm0 0H4v-2h2v2z" fill="currentColor"/>
+                            </svg> }
+                            
+
+                            
                         </button>
                     </div>
                 </div>
@@ -398,16 +422,33 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                 </div>
                 <div className='flex flex-col justify-between pt-2 border-t-2 border-darkgrey text-xs'>
                     <div className='flex flex-row justify-between items-center'>
-                        <button className='text-xs bg-black text-lightgrey border-darkgrey border-2 py-1 px-2 w-full' onClick={() => handleUpdatePixelPrice()}>Cancel Update</button>
-                        <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 w-full' 
+                        <button className='text-xs bg-black text-lightgrey border-darkgrey border-2 py-1 px-2 w-full flex items-center justify-between' onClick={() => handleUpdatePixelPrice()}
+                        >
+                            <span>
+                                Cancel Update
+                            </span>
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 w-full flex items-center justify-between' 
                             disabled={approvalLoad || setPricesLoad}
                             onClick={() => handleSetPrices()}
                         >
-                            {approvalLoad || setPricesLoad ? 'Processing...' : 'Confirm Values' }
+                            <span>
+                                {approvalLoad || setPricesLoad ? 'Processing...' : 'Confirm Values' }
+                            </span>
+                            {approvalLoad || setPricesLoad ?
+                                <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
+                            :
+                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M18 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2h2v-2h-2v2zm-2 2h2v-2h-2v2zm-2 0v2h2v-2H8zm-2-2h2v2H6v-2zm0 0H4v-2h2v2z" fill="currentColor"/>
+                                </svg>
+                            }
                         </button>
                     </div>
                     <div className='text-xs pt-2 text-lightgrey'>
-                        by confirming new pixel values, you will automatically settle any outstanding royalties on your previous pixel values for a total of {(Math.round(totalPendingRoyalties*100)/100)} wETH. Going forward, new royalties will be paid based on your newly updated values.
+                        by confirming new pixel values, you will automatically settle any outstanding royalties on your previous pixel values for a total of {(Math.round(Utils.formatEther(BigInt(totalPendingRoyalties))*100)/100)} wETH. Going forward, new royalties will be paid based on your newly updated values.
                     </div>
                 </div>
                 </div>
@@ -440,15 +481,32 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                 </div>
                 <div className='flex flex-col justify-between pt-2 border-t-2 border-darkgrey text-xs'>
                     <div className='flex flex-row justify-between items-center'>
-                        <button className='text-xs bg-black text-lightgrey border-darkgrey border-2 py-1 px-2 w-full' onClick={() => handlePayRoyalties()}>Cancel Payment</button>
-                        <button className={`text-xs py-1 px-2 w-full border-2
+                        <button className='text-xs bg-black text-lightgrey border-darkgrey border-2 py-1 px-2 w-full flex items-center justify-between' onClick={() => handlePayRoyalties()}
+                        >
+                            <span>
+                                Cancel Payment
+                            </span>
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button className={`text-xs py-1 px-2 w-full border-2 flex items-center justify-between
                                     ${Number(tokenBalance) > Utils.formatEther(totalPendingRoyalties.toString()) ? 'text-black bg-lightgrey border-darkgrey':'text-lightgrey bg-black border-darkgrey'}
                                     ${Number(tokenBalance) < Utils.formatEther(totalPendingRoyalties.toString()) && 'cursor-not-allowed'}`}
                             disabled={royaltyApprovalLoad || payRoyaltyLoad || Number(tokenBalance) < totalPendingRoyalties}
                             onClick={() => handleRoyaltyPayment()}
                         >
-                            {royaltyApprovalLoad || payRoyaltyLoad ? 'Processing...' :
-                            Number(tokenBalance) < Utils.formatEther(totalPendingRoyalties.toString()) ? 'Not enought wETH' : `Pay Royalties (${(Math.round(Utils.formatEther(totalPendingRoyalties.toString())*100)/100)} ETH)` }    
+                            <span>
+                                {royaltyApprovalLoad || payRoyaltyLoad ? 'Processing...' :
+                                Number(tokenBalance) < Utils.formatEther(totalPendingRoyalties.toString()) ? 'Not enought wETH' : `Pay Royalties (${(Math.round(Utils.formatEther(totalPendingRoyalties.toString())*100)/100)} ETH)` }    
+                            </span>
+                            {royaltyApprovalLoad || payRoyaltyLoad ?
+                                <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
+                            :
+                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M18 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2h2v-2h-2v2zm-2 2h2v-2h-2v2zm-2 0v2h2v-2H8zm-2-2h2v2H6v-2zm0 0H4v-2h2v2z" fill="currentColor"/>
+                                </svg>
+                            }    
                         </button>
                     </div>
                     
@@ -466,7 +524,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                     {userPixels.sort((a, b) => a.y - b.y || a.x - b.x).map((pixel, index) => (
                         <div key={index} className='flex justify-between items-center mb-2 p-2 border-b-2 border-darkgrey'>
                             <div className='flex flex-row align-middle items-center'>
-                                <div className='flex flex-col mr-2 w-16'>
+                                <div className='flex flex-col pr-2'>
                                     <div className='text-sm'>{pixel.x} x {pixel.y}</div>
                                 </div>
                                 {renderShape(Number(pixel.shapeID), pixel.color)}
@@ -481,10 +539,28 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                     ))}
                     </div>
                     <div className='flex flex-col justify-between pt-2 border-t-2 border-darkgrey'>
-                        <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2' onClick={() => handlePixelModification()}>Set Pixel Shape & Color</button>
+                        <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2' onClick={() => handlePixelModification()}
+                        >
+                            <span>Set Pixel Shape & Color</span>
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M18 2h-2v2h-2v2h-2v2h-2v2H8v2H6v2H4v2H2v6h6v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2V8h2V6h-2V4h-2V2zm0 8h-2v2h-2v2h-2v2h-2v2H8v-2H6v-2h2v-2h2v-2h2V8h2V6h2v2h2v2zM6 16H4v4h4v-2H6v-2z" fill="currentColor"/>
+                            </svg>
+                        </button>
                         <div className='flex flex-row justify-between items-center'>
-                            <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 w-full' onClick={() => handlePayRoyalties()}>Pay Royalties</button>
-                            <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 w-full' onClick={() => handleUpdatePixelPrice()}>Set Pixel Values</button>
+                            <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2' onClick={() => handlePayRoyalties()}
+                            >
+                                <span>Pay Royalties</span>
+                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M4 9V7h12V5h2v2h2v2h-2v2h-2V9H4zm12 2h-2v2h2v-2zm0-6h-2V3h2v2zm4 12v-2H8v-2h2v-2H8v2H6v2H4v2h2v2h2v2h2v-2H8v-2h12z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2' onClick={() => handleUpdatePixelPrice()}
+                            >
+                                <span>Set Pixel Values</span>
+                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M6 2h12v2H6V2zM4 6V4h2v2H4zm0 12V6H2v12h2zm2 2v-2H4v2h2zm12 0v2H6v-2h12zm2-2v2h-2v-2h2zm0-12h2v12h-2V6zm0 0V4h-2v2h2zm-9-1h2v2h3v2h-6v2h6v6h-3v2h-2v-2H8v-2h6v-2H8V7h3V5z" fill="currentColor"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>

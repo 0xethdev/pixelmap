@@ -28,3 +28,21 @@ body,
   display: none;  /* Chrome, Safari, Opera */
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 2s linear infinite;
+}
+
+.hide-arrows-number-input::-webkit-inner-spin-button,
+.hide-arrows-number-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
