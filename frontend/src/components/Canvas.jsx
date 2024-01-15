@@ -29,6 +29,12 @@ const Canvas = ({ setInitialLoading }) => {
             setSelectedPixels([...selectedPixels, pixel]);
         }
     };
+
+    const addDragSelectedPixels = (newPixels) => {
+        setSelectedPixels(prevSelectedPixels => [...prevSelectedPixels, ...newPixels]);
+    };
+    
+
     const removePixel = (index) => {
         const newSelectedPixels = [...selectedPixels];
         newSelectedPixels.splice(index, 1);
@@ -51,7 +57,7 @@ const Canvas = ({ setInitialLoading }) => {
             </div>
             <div className='flex flex-col w-3/5'>
                 <div className="flex justify-center items-top ">
-                    <Art grid={ setPixelData ? tempPixelData : pixels} handlePixelClick={handlePixelClick} filterActive={filterActive}/>
+                    <Art grid={ setPixelData ? tempPixelData : pixels} handlePixelClick={handlePixelClick} filterActive={filterActive} addDragSelectedPixels={addDragSelectedPixels} selectedPixels={selectedPixels}/>
                 </div>
             </div>
             <div className='flex flex-col w-1/5 mr-10'>

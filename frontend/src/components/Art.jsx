@@ -59,7 +59,9 @@ const HoverCard = ({ pixelInfo }) => {
                 </div>
             ) : (
                 <div className='flex items-center flex-col justify-center h-full text-darkgrey'>
-                    Hover over pixels for info
+                    <p>hover over pixels for info</p>
+                    <p>select pixel to add to cart</p>
+                    <p>click and drag to select multiple pixels</p>
                 </div>
             )}
         </div>
@@ -138,20 +140,73 @@ const GeneralInfo = ({ pixels }) => {
     );
 };
 
-const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
+const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDragSelectedPixels, selectedPixels }) => {
     const [hoveredPixel, setHoveredPixel] = useState(null);
     const { address, isConnected } = useAccount();
     const [searchInputX, setSearchInputX] = useState('');
     const [searchInputY, setSearchInputY] = useState('');
     const [isAnimating, setIsAnimating] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    
+    const [isDragSelecting, setIsDragSelecting] = useState(false);
+    const [dragSelectedPixels, setDragSelectedPixels] = useState({startX:'',startY:'',endX:'',endY:''});
+
     const squareSize = 8; // Size of each square
     const gap = 1; // Gap between squares
 
     const handleMouseOver = (e, pixel) => {
         setHoveredPixel(pixel);
+    
+        if(isDragSelecting){
+            setDragSelectedPixels(prevState => {
+                let { startX, startY, endX, endY } = prevState;
+    
+                if(pixel.x >= startX){
+                    endX = pixel.x;
+                } else {
+                    endX = startX;
+                    startX = pixel.x;
+                }
+    
+                if(pixel.y >= startY){
+                    endY = pixel.y;
+                } else {
+                    endY = startY;
+                    startY = pixel.y;
+                }
+    
+                return { startX, startY, endX, endY };
+            });
+        }
     };
+    
+
+    const handleMouseDown = (pixel) => {
+        setIsDragSelecting(true);
+        setDragSelectedPixels({startX:pixel.x, startY:pixel.y, endX:pixel.x,  endY:pixel.y});
+    }
+
+    const handleMouseUp = () => {
+        setIsDragSelecting(false);
+        let newPixels = [];
+        let counter = selectedPixels.length;
+        for (let y = dragSelectedPixels.startY; y <= dragSelectedPixels.endY; y++) {
+            for (let x = dragSelectedPixels.startX; x <= dragSelectedPixels.endX; x++) {
+                const foundPixel = grid.find(pixel => pixel.x === x && pixel.y === y);
+                if (foundPixel && !selectedPixels.some(p => p.x === x && p.y === y)) {
+                    if(counter<32){
+                        newPixels.push(foundPixel);
+                        counter ++;
+                    }else{
+                        break;
+                    }
+                    
+                }
+            }
+        }
+        addDragSelectedPixels(newPixels);
+    }
+    
+    
 
     const handleInputX = (e) => {
         let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
@@ -224,10 +279,18 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
                         const x = (i % 64) * (squareSize + gap)+12; 
                         const y = Math.floor(i / 64) * (squareSize + gap)+12;
                         const isOwnedByUser = pixel.owner === address;
-                        const isDimmed = isConnected && filterActive && !isOwnedByUser 
-                        //|| !filterActive && hoveredPixel !== pixel && hoveredPixel !== null;
+                        const isWithinDragRange = pixel.x >= dragSelectedPixels.startX && pixel.x <= dragSelectedPixels.endX && pixel.y >= dragSelectedPixels.startY && pixel.y <= dragSelectedPixels.endY;
 
-                        return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, handleMouseOver, handlePixelClick, isDimmed);
+                        let isDimmed;
+                        if (isDragSelecting) {
+                            // Dim pixels not within the drag range
+                            isDimmed = !isWithinDragRange;
+                        } else {
+                            // Apply filter if active when not dragging
+                            isDimmed = isConnected && filterActive && !isOwnedByUser;
+                        }
+
+                        return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, handleMouseOver, handlePixelClick, handleMouseDown, handleMouseUp, isDimmed);
                     })}
                 </svg>
                 <div className="w-[576px] absolute left-[10px] top-[610px]">
