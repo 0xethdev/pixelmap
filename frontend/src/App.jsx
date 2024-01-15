@@ -45,7 +45,7 @@ function App() {
           <PixelProvider>
               <main className="app">
                 <NavBar selectedPage = {selectedPage} setSelectedPage = {setSelectedPage} isInitialLoading={isInitialLoading}/>
-                <Banner />
+                <Banner isInitialLoading={isInitialLoading}/>
                 <Routes>
                   <Route exact path="/" element={<Canvas setInitialLoading={setInitialLoading} />}/>
                   <Route exact path="/Info" element={<Info />}/>

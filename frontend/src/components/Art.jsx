@@ -207,7 +207,7 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
                     onClick={() => handleSerachClick()}
                     animate={isAnimating ? animationSettingsSearchButton : {}}
                 >
-                    <motion.svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
+                    <motion.svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         whileHover={isAnimating ? { scale: 1.1}:{}}

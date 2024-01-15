@@ -99,7 +99,7 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
                 <div className='text-md'>TOTAL COST: {(Math.round(Utils.formatEther(BigInt(totalPrice))*100)/100).toString()} ETH</div>
                 <button 
                     className={`text-xs py-1 px-2 border-2 flex items-center justify-between gap-2
-                                ${isConnected && Number(Utils.formatEther(totalPrice.toString())) < Number(tokenBalance) ? 'bg-black text-lightgrey border-darkgrey' : 'bg-darkgrey text-white border-darkgrey'} 
+                                ${isConnected && Number(Utils.formatEther(totalPrice.toString())) < Number(tokenBalance) ? 'bg-black text-lightgrey border-darkgrey hover:bg-lightgrey hover:text-black hover:border-lightgrey' : 'bg-darkgrey text-offblack border-darkgrey'} 
                                 ${!isConnected || Number(Utils.formatEther(totalPrice.toString())) > Number(tokenBalance) && 'cursor-not-allowed'}`} 
                     disabled={!isConnected || approvalLoad || buyLoad || Number(Utils.formatEther(totalPrice.toString())) > Number(tokenBalance) }
                     onClick={() => handlePixelPurchase()}
@@ -121,7 +121,7 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
                         </div>
                     </div>
                     <div className='text-sm'>{(Math.round(Utils.formatEther(BigInt(pixel.price))*100)/100).toString()} ETH</div>
-                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2 flex items-center justify-between' onClick={() => removePixel(index)}>
+                    <button className='text-xs text-black bg-lightgrey border-darkgrey hover:text-white hover:bg-black hover:border-lightgrey border-2 py-1 px-2 flex items-center justify-between' onClick={() => removePixel(index)}>
                         <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M16 2v4h6v2h-2v14H4V8H2V6h6V2h8zm-2 2h-4v2h4V4zm0 4H6v12h12V8h-4zm-5 2h2v8H9v-8zm6 0h-2v8h2v-8z" fill="currentColor"/> </svg>
                     </button>
                 </div>
