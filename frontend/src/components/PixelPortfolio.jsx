@@ -140,8 +140,6 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
     
     };
 
-    const regex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-
     const handlePriceChange = (e, index) => {
         const newValue = e.target.value;
         if (newValue === '' || (/^\d*\.?\d{0,4}$/.test(newValue) && Number(newValue) >= 0)) {
@@ -328,6 +326,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                         <ColorPicker
                             onSelect={onColorSelect}
                             onClose={() => setShowColorPicker(false)}
+                            bgColor={'bg-offblack'}
                         />
                     ):(
                     <div>
