@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { MerkleTree } from 'merkletreejs';
 import keccak256 from 'keccak256';
+import { fetchEnsName } from '@wagmi/core'
 
 
 const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
 
-
 const CanvasArtists = ({ pixels }) => {
     const [oneArtist, setOneArtist] = useState('');
+    const [ownerNames, setOwnerNames] = useState({});
 
     useEffect(() => {
         const createArtistMerkleTree = (pixels) => {
@@ -21,6 +22,18 @@ const CanvasArtists = ({ pixels }) => {
             setOneArtist(artistHex);
         }
         createArtistMerkleTree(pixels);
+
+        {/* 
+        const fetchOwnerNames = async () => {
+            const names = {};
+            for (const pixel of pixels) {
+                const ensName = await fetchEnsName({ address: pixel.owner });
+                names[pixel.owner] = ensName || truncateAddress(pixel.owner);
+            }
+            setOwnerNames(names);
+        };
+        fetchOwnerNames();
+        */}
 
     }, [pixels]);
 
@@ -36,6 +49,7 @@ const CanvasArtists = ({ pixels }) => {
                 <div className="text-offblack text-center font-connection text-xs grid grid-cols-8 gap-1 p-1 mb-24">
                     {pixels.map((pixel, i)  => (
                     <div key={i} className="p-1">
+                        {/* {ownerNames[pixel.owner] || 'Loading...'} */}
                         {truncateAddress(pixel.owner)}
                     </div>
                     ))}
