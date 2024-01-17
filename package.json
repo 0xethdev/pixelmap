@@ -15,9 +15,11 @@
     "hardhat": "^2.19.4"
   },
   "dependencies": {
+    "@ensdomains/ens-contracts": "^1.0.1",
     "@openzeppelin/contracts": "^5.0.1",
     "chai": "^4.3.10",
     "dotenv": "^16.3.1",
+    "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.9.1"
   }
 }

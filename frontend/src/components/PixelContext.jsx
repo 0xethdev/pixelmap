@@ -61,7 +61,7 @@ export const PixelProvider = ({ children }) => {
             royaltyLastPaid: pixel.royaltyLastPaid.toString(),
             royaltyAskDate: pixel.royaltyAskDate.toString(),
         }));
-        localStorage.setItem('pixelData', JSON.stringify(allPixelsStringified));
+        sessionStorage.setItem('pixelData', JSON.stringify(allPixelsStringified));
         //console.log(allPixels);
         setPixels(allPixels);
         setLoading(false);
@@ -71,7 +71,7 @@ export const PixelProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        const cachedPixels = localStorage.getItem('pixelData');
+        const cachedPixels = sessionStorage.getItem('pixelData');
         if (cachedPixels) {
             setPixels(JSON.parse(cachedPixels));  // Use cached data
             setLoading(false);

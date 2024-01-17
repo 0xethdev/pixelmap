@@ -9,9 +9,10 @@ contract Pixelmap {
     uint public constant maxHeight = 64;
     uint public royaltyRate = 50; // rate per 1'000
     uint public constant royaltyDenominator = 1000;
-    uint public artisticPeriod = 10 days;
-    uint public begArtisticPeriod;
-    uint public endArtisticPeriod;
+    uint public constant ARTISTIC_PERIOD = 3 days;
+    uint public constant VOTING_PERIOD = 1 days;
+    uint public constant CYCLE_PERIOD = ARTISTIC_PERIOD + VOTING_PERIOD;
+    uint public canvasCreation;
     uint public constant royaltyAskPeriod = 3 days;
     uint private constant PIXEL_WIDTH_HEIGHT = 8;
 
@@ -27,25 +28,44 @@ contract Pixelmap {
         bool askedToPayRoyalties;
         uint royaltyAskDate;
     }
+
+    struct Vote {
+        uint yesVotes;
+        uint noVotes;
+        mapping (address => bool) voted;
+    }
     
     /// The window is a map that fits "width -> (height -> pixel)"
     mapping (uint => mapping (uint => Pixel)) public window;
     string[4096] public pixelSVGs;
     string[64] public rowSVGs;
+    /// Balance mapping of owner address to number of pixels owned
+    mapping (address => uint) public balanceOf;
+    /// mapping of period id to Vote
+    mapping (uint => Vote) public voteRegister;
     
     modifier isManager {
         require(msg.sender == manager, "owner current manager can call this function");
         _;
     }
 
+    modifier isArtisticPeriod {
+        require(isInArtisticPeriod(), "Artistic period currently not open");
+        _;
+    }
+
+    modifier isVotingPeriod {
+        require(isInVotingPeriod(), "Voting currently not open");
+        _;
+    }
+
     constructor(){
         manager = msg.sender;
-        begArtisticPeriod = block.timestamp;
-        endArtisticPeriod = begArtisticPeriod + artisticPeriod;
+        canvasCreation = block.timestamp;
     }
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, shape, color
-    function fillPixel( bytes[] memory _pixels ) external {
+    function fillPixel( bytes[] memory _pixels ) external isArtisticPeriod {
         uint length = _pixels.length;
         bool[] memory uniqueRows = new bool[](64);
         
@@ -55,7 +75,7 @@ contract Pixelmap {
             revert('pixel is out of bounds');
             }
             require(_shape < 10, 'shape ID not available');
-            require(!window[_x][_y].askedToPayRoyalties, 'user was asked to first settle royalty payment');
+            require(!window[_x][_y].askedToPayRoyalties, 'owner was asked to first settle royalty payment');
             if(window[_x][_y].owner == msg.sender){
                 window[_x][_y].color = _color;
                 window[_x][_y].shapeID = _shape;
@@ -134,6 +154,7 @@ contract Pixelmap {
             }
             if(window[xValues[i]][yValues[i]].owner == address(0)){
                 window[xValues[i]][yValues[i]].owner = msg.sender;
+                balanceOf[msg.sender] += 1;
             }else{
                 uint royalties = calculateRoyalties(xValues[i], yValues[i]);
                 if(window[xValues[i]][yValues[i]].price > royalties){
@@ -142,12 +163,16 @@ contract Pixelmap {
                     require(currency.allowance(msg.sender, address(this)) >= window[xValues[i]][yValues[i]].price, 'insufficient allowance to buy pixel');
                     currency.transferFrom(msg.sender, window[xValues[i]][yValues[i]].owner, netPrice);
                     currency.transferFrom(msg.sender, manager, royalties);
+                    balanceOf[window[xValues[i]][yValues[i]].owner] -= 1;
+                    balanceOf[msg.sender] +=1;
                     window[xValues[i]][yValues[i]].owner = msg.sender;
                     window[xValues[i]][yValues[i]].royaltyLastPaid = block.timestamp;
                 }else{
                     require(currency.balanceOf(address(msg.sender)) > window[xValues[i]][yValues[i]].price, 'not sufficient balance to buy pixel');
                     require(currency.allowance(msg.sender, address(this)) >= window[xValues[i]][yValues[i]].price, 'insufficient allowance to buy pixel');
                     currency.transferFrom(msg.sender, manager, window[xValues[i]][yValues[i]].price);
+                    balanceOf[window[xValues[i]][yValues[i]].owner] -= 1;
+                    balanceOf[msg.sender] +=1;
                     window[xValues[i]][yValues[i]].owner = msg.sender;
                     window[xValues[i]][yValues[i]].royaltyLastPaid = block.timestamp;
                 }   
@@ -196,6 +221,48 @@ contract Pixelmap {
     function calculateRoyalties(uint x, uint y) public view returns (uint) {
         uint timePeriod = block.timestamp - window[x][y].royaltyLastPaid;
         return (timePeriod * window[x][y].price * royaltyRate) / (360 days * royaltyDenominator);
+    }
+
+    /// Voting mechanism
+    function castVote(bool vote) external isVotingPeriod {
+        uint pixelsOwned = balanceOf[msg.sender];
+        require(pixelsOwned > 0, 'no pixels owned = no votes to be casted');
+        require(voteRegister[getCurrentCycle()].voted[msg.sender] == false, 'already voted');
+
+        if (vote) {
+            voteRegister[getCurrentCycle()].yesVotes += pixelsOwned;
+        } else {
+            voteRegister[getCurrentCycle()].noVotes += pixelsOwned;
+        }
+        voteRegister[getCurrentCycle()].voted[msg.sender] = true;
+    }
+
+    function checkVoteOutcome() external view returns (bool) {
+        uint256 totalVotes = voteRegister[getCurrentCycle()].yesVotes + voteRegister[getCurrentCycle()].noVotes;
+        require(totalVotes > 0, "No votes cast");
+
+        return voteRegister[getCurrentCycle()].yesVotes > totalVotes / 2;
+    }
+    ///////
+
+    /// Period Management Functions
+
+    function getCurrentCycle() public view returns (uint) {
+        return (block.timestamp - canvasCreation) / CYCLE_PERIOD;
+    }
+
+    function isInArtisticPeriod() public view returns (bool) {
+        uint cycleTime = (block.timestamp - canvasCreation) % CYCLE_PERIOD;
+        return cycleTime < ARTISTIC_PERIOD;
+    }
+
+    function isInVotingPeriod() public view returns (bool) {
+        return !isInArtisticPeriod();
+    }
+
+    ///////
+    function getBalance(address _owner) public view returns (uint) {
+        return balanceOf[_owner];
     }
 
     function updateCurrency(address _newToken) external isManager {
