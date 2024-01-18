@@ -25,8 +25,6 @@ export const PeriodProvider = ({ children }) => {
             functionName: 'CYCLE_PERIOD',
         });
 
-        setCurrentCycleNr(Number(cycleperiod))
-
         const canvasCreation = await readContract({
             address: contractAddr,
             abi: Pixelmap.abi,
@@ -38,6 +36,7 @@ export const PeriodProvider = ({ children }) => {
             abi: Pixelmap.abi,
             functionName: 'getCurrentCycle',
         });
+        setCurrentCycleNr(Number(currentCycleTime))
 
         const cycleEnd = (Number(currentCycleTime)+1) * Number(cycleperiod) + Number(canvasCreation);
         setCycleEndTime(cycleEnd);

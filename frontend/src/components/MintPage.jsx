@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react'
-import { useAccount, useContractWrite } from 'wagmi'
+import { useAccount, useContractWrite, useContractEvent } from 'wagmi'
 import { readContract } from '@wagmi/core';
 import PixelContext from './PixelContext'
 import PeriodContext from './PeriodContext'
@@ -23,6 +23,7 @@ const MintPage = ({ setInitialLoading }) => {
     const [yesVotes, setYesVotes] = useState(0);
     const [noVotes, setNoVotes] = useState(0);
     const [totalVotes, setTotalVotes] = useState(0);
+    const [userBalance, setUserBalance] = useState(0);
     
     const squareSize = 5; // Size of each square
     const gap = 1; // Gap between squares
@@ -59,6 +60,7 @@ const MintPage = ({ setInitialLoading }) => {
     useEffect(() => {
 
         const retrieveCurrentVote = async (voteCycle) => {
+            
             const currentVote = await readContract({
                 address: contractAddr,
                 abi: Pixelmap.abi,
@@ -79,16 +81,27 @@ const MintPage = ({ setInitialLoading }) => {
                 args:[address],
             });
             setUserAlreadyVoted(hasVoted)
-            
+        }
+
+        const balanceOfUser = async () => {
+            const balance = await readContract({
+                address: contractAddr,
+                abi: Pixelmap.abi,
+                functionName: 'balanceOf',
+                args:[address],
+            });
+            setUserBalance(Number(balance))
         }
 
         if(updateResults){
             retrieveCurrentVote(currentCycleNr);
             retrieveUserVoted();
+            balanceOfUser();
             setUpdateResults(false);
         }
+        
 
-    },[updateResults, yesVotes, noVotes, totalVotes]);
+    },[updateResults, yesVotes, noVotes, totalVotes, userBalance]);
 
 
     /// HANDLE VOTING FUNCTION  
@@ -97,13 +110,25 @@ const MintPage = ({ setInitialLoading }) => {
         abi: Pixelmap.abi,
         functionName: 'castVote',
         onSuccess(){
-            console.log('vote casted');
             setUpdateResults(true);
         }
     });
     async function handleVoting(vote) {        
         await castVote({ args: [vote] });      
     }
+
+    const handleVotingEvent = (event) => {
+        setUpdateResults(true);
+    };
+
+    useContractEvent({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        eventName: 'VoteCasted',
+        listener:handleVotingEvent,
+    })
+
+    
 
     return (
         <div className='container'>
@@ -139,7 +164,7 @@ const MintPage = ({ setInitialLoading }) => {
                         <div className='p-1 flex flex-row items-center w-full text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
                             <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
                                 <div>Yes Votes</div>
-                                <div className='text-sm text-lightgrey'>{yesVotes} | {totalVotes > 0 ? yesVotes/totalVotes *100 : 0}%</div>
+                                <div className='text-sm text-lightgrey'>{yesVotes} | {totalVotes > 0 ? (Math.round(yesVotes/totalVotes*1000)/1000) *100 : 0}%</div>
                             </div>
                             <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
                                 <div>Total Casted Votes</div>
@@ -147,7 +172,7 @@ const MintPage = ({ setInitialLoading }) => {
                             </div>
                             <div className='flex flex-col items-center w-1/3'>
                                 <div>No Votes</div>
-                                <div className='text-sm text-lightgrey'>{noVotes} | {totalVotes > 0 ? noVotes/totalVotes *100 : 0}%</div>
+                                <div className='text-sm text-lightgrey'>{noVotes} | {totalVotes > 0 ? (Math.round(noVotes/totalVotes*1000)/1000) *100 : 0}%</div>
                             </div>
                         </div> 
                         <div className='p-1 flex flex-row justify-center items-center w-full px-2 text-lightgrey font-connection text-sm border-b-2 border-r-2 border-l-2 border-darkgrey bg-offblack'>
@@ -160,7 +185,7 @@ const MintPage = ({ setInitialLoading }) => {
                                     {!userAlreadyVoted ?
                                         <div className='bg-offblack text-xs border-darkgrey p-2 border-2'>
                                             <p className='mb-1'><span className='border-b-2 border-lightgrey'>{truncateAddress(address)}</span>, do you think this period's canvas should be minted as NFT?</p>
-                                            <p>you currently own 506 pixels - your vote will count for 506/4096 possible votes (4.5%)</p>
+                                            <p>you currently own {userBalance} pixels - your vote will count for {userBalance}/4096 possible votes ( {(Math.round(userBalance/4096*1000)/1000) *100} % )</p>
                                         </div>    
                                     :
                                         <p className='bg-offblack text-xs border-darkgrey p-2 border-2'><span className='border-b-2 border-lightgrey'>{truncateAddress(address)}</span> you have already casted your vote for this canvas.</p> 

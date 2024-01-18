@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { useContractEvent } from 'wagmi'
 import { readContract } from '@wagmi/core';
 import Pixelmap from '../artifacts/contracts/Pixelmap.sol/Pixelmap.json';
 import contractAddr from '../hooks/contractAddr';
@@ -10,6 +11,48 @@ export const PixelProvider = ({ children }) => {
     const [pixels, setPixels] = useState(Array(64 * 64).fill({ color: '#ffffff' }));
     const [updatedPixels, setUpdatedPixels] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const handlePixelChange = (event) => {
+        const uniqueKeys = new Set();
+        const uniqueXYPairs = [];
+
+        event.forEach(item => {
+            const { x, y } = item.args;
+            const key = `${x}:${y}`;
+
+            if (!uniqueKeys.has(key)) {
+                uniqueKeys.add(key);
+                uniqueXYPairs.push({ x, y });
+            }
+        })
+        console.log(uniqueXYPairs);
+        setUpdatedPixels(uniqueXYPairs);
+    };
+
+    useContractEvent({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        eventName: 'PixelBought',
+        listener:handlePixelChange,
+    })
+    useContractEvent({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        eventName: 'PixelFilled',
+        listener:handlePixelChange,
+    })
+    useContractEvent({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        eventName: 'PixelValueSet',
+        listener:handlePixelChange,
+    })
+    useContractEvent({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        eventName: 'RoyaltiesPaid',
+        listener:handlePixelChange,
+    })
 
     const fetchBatch = async (xValues, yValues) => {
         //const startTime = performance.now();  // Start time for the batch fetch
