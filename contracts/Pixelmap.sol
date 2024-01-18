@@ -59,6 +59,12 @@ contract Pixelmap {
         _;
     }
 
+    event PixelBought (uint indexed x, uint indexed y);
+    event PixelFilled (uint indexed x, uint indexed y);
+    event PixelValueSet (uint indexed x, uint indexed y);
+    event RoyaltiesPaid (uint indexed x, uint indexed y);
+    event VoteCasted (address indexed owner);
+
     constructor(){
         manager = msg.sender;
         canvasCreation = block.timestamp;
@@ -87,6 +93,9 @@ contract Pixelmap {
                 
                 pixelSVGs[pixelID] = generateShapeSVG(window[_x][_y].shapeID, _x * 9, _y * 9, window[_x][_y].color);
                 uniqueRows[_y] = true;
+                
+                emit PixelFilled (_x,_y);
+    
             }
         }
         for(uint row = 0; row < 64;){
@@ -113,6 +122,7 @@ contract Pixelmap {
         // set new pixel values
         for (uint i = 0; i < length;) {
             window[xValues[i]][yValues[i]].price = priceValues[i];
+            emit PixelValueSet (xValues[i],yValues[i]);
             unchecked{i++;}
         }
     }
@@ -140,6 +150,7 @@ contract Pixelmap {
                     window[xValues[i]][yValues[i]].askedToPayRoyalties = false;
                     window[xValues[i]][yValues[i]].royaltyAskDate = 0;
                 }
+                emit RoyaltiesPaid (xValues[i], yValues[i]);
             }
         }
     }
@@ -177,6 +188,7 @@ contract Pixelmap {
                     window[xValues[i]][yValues[i]].royaltyLastPaid = block.timestamp;
                 }   
             }
+            emit PixelBought (xValues[i],yValues[i]);
             unchecked{i++;}
         }
     }
@@ -235,6 +247,7 @@ contract Pixelmap {
             voteRegister[getCurrentCycle()].noVotes += pixelsOwned;
         }
         voteRegister[getCurrentCycle()].voted[msg.sender] = true;
+        emit VoteCasted (msg.sender);
     }
 
     function checkVoteOutcome() external view returns (bool) {
@@ -242,6 +255,10 @@ contract Pixelmap {
         require(totalVotes > 0, "No votes cast");
 
         return voteRegister[getCurrentCycle()].yesVotes > totalVotes / 2;
+    }
+
+    function hasVoted(address _owner) external view returns (bool) {
+        return voteRegister[getCurrentCycle()].voted[_owner];
     }
     ///////
 

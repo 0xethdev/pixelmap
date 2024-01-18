@@ -11,6 +11,10 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
     const { tokenBalance } = useContext(UserBalanceContext);
     const { isConnected, address } = useAccount();
 
+    useEffect(() => {
+        sessionStorage.setItem('selectedPage', selectedPage);
+    }, [selectedPage]);
+
     return (
         <div className="sticky top-0 bg-black z-30" >
             <div className="container hidden md:block">

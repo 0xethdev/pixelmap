@@ -7,6 +7,7 @@ const PeriodContext = createContext();
 
 export const PeriodProvider = ({ children }) => {
     const [currentPeriodisArt, setCurrentPeriod] = useState(true);
+    const [currentCycleNr, setCurrentCycleNr] = useState(0);
     const [cycleEndTime, setCycleEndTime] = useState(0);
 
     const fetchCurrentPeriod = async () => {
@@ -23,6 +24,8 @@ export const PeriodProvider = ({ children }) => {
             abi: Pixelmap.abi,
             functionName: 'CYCLE_PERIOD',
         });
+
+        setCurrentCycleNr(Number(cycleperiod))
 
         const canvasCreation = await readContract({
             address: contractAddr,
@@ -42,13 +45,14 @@ export const PeriodProvider = ({ children }) => {
 
     useEffect(() => {
         fetchCurrentPeriod();
-        const interval = setInterval(fetchCurrentPeriod, 60000); // Update every minute
+        const interval = setInterval(fetchCurrentPeriod, 30000); // Update every minute
         return () => clearInterval(interval);
     }, []);
 
     const value = {
         currentPeriodisArt,
-        cycleEndTime
+        cycleEndTime,
+        currentCycleNr
     };
 
     return <PeriodContext.Provider value={value}>{children}</PeriodContext.Provider>;

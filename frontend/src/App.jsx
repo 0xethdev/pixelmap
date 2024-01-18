@@ -13,7 +13,7 @@ import MintPage from './components/MintPage'
 import Banner from './components/Banner'
 
 function App() {
-  const[selectedPage, setSelectedPage] = useState('');
+  const [selectedPage, setSelectedPage] = useState(localStorage.getItem('selectedPage') || '');
   const [isInitialLoading, setInitialLoading] = useState(true);
 
   const config = createConfig(
@@ -44,8 +44,8 @@ function App() {
                 <Banner isInitialLoading={isInitialLoading}/>
                 <Routes>
                   <Route exact path="/" element={<Canvas setInitialLoading={setInitialLoading} />}/>
-                  <Route exact path="/Info" element={<Info />}/>
-                  <Route exact path="/Mint" element={<MintPage />}/>
+                  <Route exact path="/Info" element={<Info setInitialLoading={setInitialLoading}/>}/>
+                  <Route exact path="/Mint" element={<MintPage setInitialLoading={setInitialLoading}/>}/>
                 </Routes>
               </main>
             </PeriodProvider>

@@ -271,6 +271,8 @@ describe('PixelMap', function () {
     let response = await contract.checkVoteOutcome();
     expect(response).to.be.equal(true);
 
+    expect( contract.connect(buyer).castVote(true) ).to.be.reverted;
+
   });
 
 });
