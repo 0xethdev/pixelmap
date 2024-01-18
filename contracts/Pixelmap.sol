@@ -248,7 +248,7 @@ contract Pixelmap {
     /// Period Management Functions
 
     function getCurrentCycle() public view returns (uint) {
-        return (block.timestamp - canvasCreation) / CYCLE_PERIOD;
+        return ((block.timestamp - canvasCreation) / CYCLE_PERIOD);
     }
 
     function isInArtisticPeriod() public view returns (bool) {

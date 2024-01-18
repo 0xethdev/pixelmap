@@ -6,6 +6,7 @@ import { Utils } from 'alchemy-sdk'
 import Pixelmap from '../../src/artifacts/contracts/Pixelmap.sol/Pixelmap.json';
 import contractAddr from '../hooks/contractAddr';
 import PixelContext from './PixelContext';
+import PeriodContext from './PeriodContext';
 import { UserBalanceContext } from './UserBalanceContext';
 import { createShape } from '../assets/gridShapes';
 import ColorPicker from './ColorPicker';
@@ -16,6 +17,7 @@ const timeOffset = 0;
 
 const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSetPixelData, tempPixelData, setTempPixelData }) => {
     const { isConnected, address } = useAccount();
+    const { currentPeriodisArt, cycleEndTime } = useContext(PeriodContext);
     const { tokenBalance, tokenAllowance, refreshBalanceData } = useContext(UserBalanceContext);
     const [currencyApproval, setCurrencyApproval] = useState(false); // WETH FOR PURCHASE
     const [royaltyPaymentApproval, setRoyaltyPaymentApproval] = useState(false); // WETH FOR ROYALTY PAYMENT
@@ -61,23 +63,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
         let updatedTempPixelData = [... tempPixelData];
         updatedTempPixelData[userPixelIndices[colorPickerIndex]].color = newInput;
         setTempPixelData(updatedTempPixelData);
-
-        
       };
-
-    const formatDate = (timestamp) => {
-        const date = new Date(timestamp * 1000);
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const day = ("0" + date.getDate()).slice(-2);
-        const month = months[date.getMonth()];
-        const year = date.getFullYear().toString().slice(-2);
-        
-        if(day == '01' && month == 'Jan' && year == '70'){
-            return 'N/A'
-        }else{
-            return `${day} ${month} '${year}`;
-        }
-    }
 
     const outstandingRoyalties = (pixel) => {
         const lastPaymentDate = new Date(Number(pixel.royaltyLastPaid)*1000);
@@ -548,13 +534,22 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
                     ))}
                     </div>
                     <div className='flex flex-col justify-between pt-2 border-t-2 border-darkgrey'>
-                        <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey hover:bg-black hover:text-white hover:border-lightgrey py-1 px-2' onClick={() => handlePixelModification()}
+                        {currentPeriodisArt ? 
+                        <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey hover:bg-black hover:text-white hover:border-lightgrey py-1 px-2'
+                            disabled={!currentPeriodisArt}
+                            onClick={() => handlePixelModification()}
                         >
                             <span>Set Pixel Shape & Color</span>
                             <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M18 2h-2v2h-2v2h-2v2h-2v2H8v2H6v2H4v2H2v6h6v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2V8h2V6h-2V4h-2V2zm0 8h-2v2h-2v2h-2v2h-2v2H8v-2H6v-2h2v-2h2v-2h2V8h2V6h2v2h2v2zM6 16H4v4h4v-2H6v-2z" fill="currentColor"/>
                             </svg>
                         </button>
+                        :
+                        <div className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey py-1 px-2'>
+                            Artistic Period currently closed
+                        </div>
+                        }
+                        
                         <div className='flex flex-row justify-between items-center'>
                             <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey  hover:bg-black hover:text-white hover:border-lightgrey py-1 px-2' onClick={() => handlePayRoyalties()}
                             >

@@ -4,22 +4,17 @@ import { mainnet, sepolia, localhost } from 'wagmi/chains'
 import { WagmiConfig, createConfig } from 'wagmi'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
 import { PixelProvider } from './components/PixelContext';
+import { PeriodProvider } from './components/PeriodContext';
 import { UserBalanceProvider } from './components/UserBalanceContext'
 import NavBar from './components/NavBar'
 import Canvas from './components/Canvas'
 import Info from './components/Info'
-import Banner from "./components/Banner";
+import MintPage from './components/MintPage'
+import Banner from './components/Banner'
 
 function App() {
-  const[selectedPage, setSelectedPage] = useState("Canvas");
+  const[selectedPage, setSelectedPage] = useState('');
   const [isInitialLoading, setInitialLoading] = useState(true);
-
-  useEffect(() => {
-    const currentpath = window.location.pathname;
-    if(currentpath === "/") {
-      setSelectedPage("Canvas");
-    }
-  },[]);
 
   const config = createConfig(
     getDefaultConfig({
@@ -43,14 +38,17 @@ function App() {
       <ConnectKitProvider>
         <UserBalanceProvider>
           <PixelProvider>
+            <PeriodProvider>
               <main className="app">
                 <NavBar selectedPage = {selectedPage} setSelectedPage = {setSelectedPage} isInitialLoading={isInitialLoading}/>
                 <Banner isInitialLoading={isInitialLoading}/>
                 <Routes>
                   <Route exact path="/" element={<Canvas setInitialLoading={setInitialLoading} />}/>
                   <Route exact path="/Info" element={<Info />}/>
+                  <Route exact path="/Mint" element={<MintPage />}/>
                 </Routes>
               </main>
+            </PeriodProvider>
           </PixelProvider>
         </UserBalanceProvider>
       </ ConnectKitProvider>
