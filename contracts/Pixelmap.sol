@@ -3,7 +3,13 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+interface CanvasCollection {
+    function mint(address to) external;
+}
+
 contract Pixelmap {
+    CanvasCollection public nftContract;
+
     address public manager;
     uint public constant maxWidth = 64;
     uint public constant maxHeight = 64;
@@ -44,6 +50,10 @@ contract Pixelmap {
     /// mapping of period id to Vote
     mapping (uint => Vote) public voteRegister;
     
+    function getRowSVG() external view returns (string[64] memory){
+        return rowSVGs;
+    }
+
     modifier isManager {
         require(msg.sender == manager, "owner current manager can call this function");
         _;
@@ -64,6 +74,7 @@ contract Pixelmap {
     event PixelValueSet (uint indexed x, uint indexed y);
     event RoyaltiesPaid (uint indexed x, uint indexed y);
     event VoteCasted (address indexed owner);
+    event NFTMinted(uint cycle);
 
     constructor(){
         manager = msg.sender;
@@ -86,10 +97,7 @@ contract Pixelmap {
                 window[_x][_y].color = _color;
                 window[_x][_y].shapeID = _shape;
 
-                uint pixelID = _x;
-                if(_y>0){
-                    pixelID = (_x * _y) + ((maxWidth - _x)*(_y -1));    
-                }
+                uint pixelID = _x + maxWidth * _y;
                 
                 pixelSVGs[pixelID] = generateShapeSVG(window[_x][_y].shapeID, _x * 9, _y * 9, window[_x][_y].color);
                 uniqueRows[_y] = true;
@@ -250,11 +258,15 @@ contract Pixelmap {
         emit VoteCasted (msg.sender);
     }
 
-    function checkVoteOutcome() external view returns (bool) {
-        uint256 totalVotes = voteRegister[getCurrentCycle()].yesVotes + voteRegister[getCurrentCycle()].noVotes;
+    function checkVoteOutcome(uint _cycle) external {
+        require(_cycle < getCurrentCycle(), 'check vote outcomes only possible for concluded cycles');
+        uint256 totalVotes = voteRegister[_cycle].yesVotes + voteRegister[_cycle].noVotes;
         require(totalVotes > 0, "No votes cast");
 
-        return voteRegister[getCurrentCycle()].yesVotes > totalVotes / 2;
+        if (voteRegister[_cycle].yesVotes > totalVotes / 2){
+            nftContract.mint(manager);
+            emit NFTMinted(_cycle);
+        }
     }
 
     function hasVoted(address _owner) external view returns (bool) {
@@ -284,6 +296,10 @@ contract Pixelmap {
 
     function updateCurrency(address _newToken) external isManager {
         currency = IERC20(address(_newToken));
+    }
+
+    function setNFTContract(address _nftContract) external isManager {
+        nftContract = CanvasCollection(_nftContract);
     }
 
     function generateShapeSVG(uint shapeID, uint x, uint y, string memory color) internal pure returns (string memory) {
