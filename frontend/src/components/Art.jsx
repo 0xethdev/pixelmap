@@ -38,28 +38,30 @@ const HoverCard = ({ pixelInfo }) => {
     };
     
     return (    
-        <div className='w-[576px] h-[100px] justify-between absolute px-4 bg-black border-2 border-darkgrey z-10 font-connection'>
+        <div className='w-[512px] h-[70px] justify-between absolute px-4 bg-black border-2 border-darkgrey z-10 font-connection'>
             {pixelInfo ? (
                 <div className='flex flex-col justify-between h-full'>
-                    <div className='flex flex-row h-[40px] border-b-2 border-darkgrey'>
+                    <div className='flex flex-row h-[30px] border-b-2 border-darkgrey'>
                         <div className='flex justify-end flex-col w-1/2'>
-                            <p className='text-lg text-white'>{pixelInfo.x} <span className='text-darkgrey text-xl'>x</span> {pixelInfo.y}</p>
+                            <p className='text-md text-white'>{pixelInfo.x} <span className='text-darkgrey text-lg'>x</span> {pixelInfo.y}</p>
                         </div>
                         <div className='flex flex-col w-1/2 justify-center items-end'>
                             {renderShape(Number(pixelInfo.shapeID), pixelInfo.color)}
                         </div>
                     </div>
-                    <div className='flex flex-row items-center h-[30px]'>
+                    <div className='flex flex-row items-center h-[20px]'>
                         <p className="text-xs text-white"><span className='text-darkgrey text-xs'>owned by</span> {truncateAddress(pixelInfo.owner)}</p>
                     </div>
-                    <div className='flex flex-row justify-between items-center h-[30px]'>
-                        <p className='text-md text-white'><span className='text-darkgrey text-xs'>price:</span> {Math.round(Utils.formatEther(pixelInfo.price)*100)/100}</p>
+                    <div className='flex flex-row justify-between items-center h-[20px]'>
+                        <p className='text-xs text-white'><span className='text-darkgrey text-xs'>price:</span> {Math.round(Utils.formatEther(pixelInfo.price)*100)/100}</p>
                         <p className='text-xs text-white'><span className='text-darkgrey text-xs'>royalties last paid:</span> {formatDate(pixelInfo.royaltyLastPaid)}</p>
                     </div>
                 </div>
             ) : (
-                <div className='flex items-center flex-col justify-center h-full text-darkgrey'>
-                    Hover over pixels for info
+                <div className='flex items-center flex-col justify-center h-full text-darkgrey text-sm'>
+                    <p>hover over pixels for info</p>
+                    <p>select pixel to add to cart</p>
+                    <p>click and drag to select multiple pixels</p>
                 </div>
             )}
         </div>
@@ -113,7 +115,7 @@ const GeneralInfo = ({ pixels }) => {
     const { lowestPrice, averagePrice, highestPrice, uniqueOwnersCount, ownerWithMostPixels } = generalInfo;
 
     return (
-        <div className='p-1 flex flex-row items-center w-[576px] text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
+        <div className='p-1 flex flex-row items-center w-[512px] text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
             <div className='flex flex-col items-center w-1/5 border-r-2 border-darkgrey'>
                 <div>Lowest Price</div>
                 <div className='text-sm text-lightgrey'>{lowestPrice !== ''? lowestPrice.toString() : 'N/A'}</div>
@@ -138,20 +140,73 @@ const GeneralInfo = ({ pixels }) => {
     );
 };
 
-const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
+const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDragSelectedPixels, selectedPixels }) => {
     const [hoveredPixel, setHoveredPixel] = useState(null);
     const { address, isConnected } = useAccount();
     const [searchInputX, setSearchInputX] = useState('');
     const [searchInputY, setSearchInputY] = useState('');
     const [isAnimating, setIsAnimating] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    
-    const squareSize = 8; // Size of each square
+    const [isDragSelecting, setIsDragSelecting] = useState(false);
+    const [dragSelectedPixels, setDragSelectedPixels] = useState({startX:'',startY:'',endX:'',endY:''});
+
+    const squareSize = 7; // Size of each square
     const gap = 1; // Gap between squares
 
     const handleMouseOver = (e, pixel) => {
         setHoveredPixel(pixel);
+    
+        if(isDragSelecting){
+            setDragSelectedPixels(prevState => {
+                let { startX, startY, endX, endY } = prevState;
+    
+                if(pixel.x >= startX){
+                    endX = pixel.x;
+                } else {
+                    endX = startX;
+                    startX = pixel.x;
+                }
+    
+                if(pixel.y >= startY){
+                    endY = pixel.y;
+                } else {
+                    endY = startY;
+                    startY = pixel.y;
+                }
+    
+                return { startX, startY, endX, endY };
+            });
+        }
     };
+    
+
+    const handleMouseDown = (pixel) => {
+        setIsDragSelecting(true);
+        setDragSelectedPixels({startX:pixel.x, startY:pixel.y, endX:pixel.x,  endY:pixel.y});
+    }
+
+    const handleMouseUp = () => {
+        setIsDragSelecting(false);
+        let newPixels = [];
+        let counter = selectedPixels.length;
+        for (let y = dragSelectedPixels.startY; y <= dragSelectedPixels.endY; y++) {
+            for (let x = dragSelectedPixels.startX; x <= dragSelectedPixels.endX; x++) {
+                const foundPixel = grid.find(pixel => pixel.x === x && pixel.y === y);
+                if (foundPixel && !selectedPixels.some(p => p.x === x && p.y === y)) {
+                    if(counter<32){
+                        newPixels.push(foundPixel);
+                        counter ++;
+                    }else{
+                        break;
+                    }
+                    
+                }
+            }
+        }
+        addDragSelectedPixels(newPixels);
+    }
+    
+    
 
     const handleInputX = (e) => {
         let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
@@ -195,7 +250,7 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
     return (
         <div className='flex flex-col items-center'>
             <GeneralInfo pixels={grid} />
-            <div className='flex flex-row justify-between items-center w-[576px] mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey my-2 py-1 px-2'>
+            <div className='flex flex-row justify-between items-center w-[512px] mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey my-2 py-1 px-2'>
                 <span className='w-1/5' >pixel search</span>
                 <div className='flex flex-row justify-center items-center'>
                     <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputX} onChange={(e) => handleInputX(e)} min="0" max="63" placeholder="X: 0-63"/>
@@ -217,20 +272,28 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive }) => {
                 </motion.button>
             </div>
             <div className='relative'>
-                <svg width="600" height="600" className="canvas-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"
+                <svg width="520" height="520" className="canvas-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520"
                 onMouseLeave={() => setHoveredPixel(null)}>
                     {grid.map((pixel, i) => {
                         
-                        const x = (i % 64) * (squareSize + gap)+12; 
-                        const y = Math.floor(i / 64) * (squareSize + gap)+12;
+                        const x = (i % 64) * (squareSize + gap)+4; 
+                        const y = Math.floor(i / 64) * (squareSize + gap)+4;
                         const isOwnedByUser = pixel.owner === address;
-                        const isDimmed = isConnected && filterActive && !isOwnedByUser 
-                        //|| !filterActive && hoveredPixel !== pixel && hoveredPixel !== null;
+                        const isWithinDragRange = pixel.x >= dragSelectedPixels.startX && pixel.x <= dragSelectedPixels.endX && pixel.y >= dragSelectedPixels.startY && pixel.y <= dragSelectedPixels.endY;
 
-                        return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, handleMouseOver, handlePixelClick, isDimmed);
+                        let isDimmed;
+                        if (isDragSelecting) {
+                            // Dim pixels not within the drag range
+                            isDimmed = !isWithinDragRange;
+                        } else {
+                            // Apply filter if active when not dragging
+                            isDimmed = isConnected && filterActive && !isOwnedByUser;
+                        }
+
+                        return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, handleMouseOver, handlePixelClick, handleMouseDown, handleMouseUp, isDimmed);
                     })}
                 </svg>
-                <div className="w-[576px] absolute left-[10px] top-[610px]">
+                <div className="w-[512px] absolute left-[4px] top-[525px]">
                     <HoverCard pixelInfo={hoveredPixel} />
                 </div>
             </div>

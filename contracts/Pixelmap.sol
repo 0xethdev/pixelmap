@@ -3,15 +3,23 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+interface CanvasCollection {
+    function mint(address to) external;
+    function totalSupply() external view returns (uint256);
+}
+
 contract Pixelmap {
+    CanvasCollection public nftContract;
+
     address public manager;
-    uint public constant maxWidth = 64;
-    uint public constant maxHeight = 64;
-    uint public royaltyRate = 50; // rate per 1'000
+    uint8 public constant maxWidth = 64;
+    uint8 public constant maxHeight = 64;
+    uint8 public royaltyRate = 50; // rate per 1'000
     uint public constant royaltyDenominator = 1000;
-    uint public artisticPeriod = 10 days;
-    uint public begArtisticPeriod;
-    uint public endArtisticPeriod;
+    uint public constant ARTISTIC_PERIOD = 3 days;
+    uint public constant VOTING_PERIOD = 1 days;
+    uint public constant CYCLE_PERIOD = ARTISTIC_PERIOD + VOTING_PERIOD;
+    uint public canvasCreation;
     uint public constant royaltyAskPeriod = 3 days;
     uint private constant PIXEL_WIDTH_HEIGHT = 8;
 
@@ -20,56 +28,88 @@ contract Pixelmap {
     
     struct Pixel {
         address owner;
-        uint shapeID;
+        uint8 shapeID;
         uint256 price;
         string color;
-        uint royaltyLastPaid;
+        uint256 royaltyLastPaid;
         bool askedToPayRoyalties;
-        uint royaltyAskDate;
+        uint256 royaltyAskDate;
+    }
+
+    struct Vote {
+        uint16 yesVotes;
+        uint16 noVotes;
+        mapping (address => bool) voted;
     }
     
     /// The window is a map that fits "width -> (height -> pixel)"
-    mapping (uint => mapping (uint => Pixel)) public window;
+    mapping (uint8 => mapping (uint8 => Pixel)) public window;
     string[4096] public pixelSVGs;
     string[64] public rowSVGs;
+    /// Balance mapping of owner address to number of pixels owned
+    mapping (address => uint16) public balanceOf;
+    /// mapping of period id to Vote
+    mapping (uint256 => Vote) public voteRegister;
+    /// mapping tokenID to mint date
+    mapping (uint256 => uint256) public mintDates;
     
+    function getRowSVG() external view returns (string[64] memory){
+        return rowSVGs;
+    }
+
     modifier isManager {
         require(msg.sender == manager, "owner current manager can call this function");
         _;
     }
 
+    modifier isArtisticPeriod {
+        require(isInArtisticPeriod(), "Artistic period currently not open");
+        _;
+    }
+
+    modifier isVotingPeriod {
+        require(isInVotingPeriod(), "Voting currently not open");
+        _;
+    }
+
+    event PixelBought (uint8 indexed x, uint8 indexed y);
+    event PixelFilled (uint8 indexed x, uint8 indexed y);
+    event PixelValueSet (uint8 indexed x, uint8 indexed y);
+    event RoyaltiesPaid (uint8 indexed x, uint8 indexed y);
+    event VoteCasted (address indexed owner);
+    event NFTMinted(uint32 cycle);
+
     constructor(){
         manager = msg.sender;
-        begArtisticPeriod = block.timestamp;
-        endArtisticPeriod = begArtisticPeriod + artisticPeriod;
+        canvasCreation = block.timestamp;
     }
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, shape, color
-    function fillPixel( bytes[] memory _pixels ) external {
+    function fillPixel( bytes[] memory _pixels ) external isArtisticPeriod {
         uint length = _pixels.length;
         bool[] memory uniqueRows = new bool[](64);
         
-        for (uint i=0; i < length; i++){
-            (uint _x, uint _y, uint _shape, string memory _color) = abi.decode(_pixels[i], (uint, uint, uint, string));
+        for (uint8 i=0; i < length; i++){
+            (uint8 _x, uint8 _y, uint8 _shape, string memory _color) = abi.decode(_pixels[i], (uint8, uint8, uint8, string));
             if (isOutOfBound(_x,_y)) {
             revert('pixel is out of bounds');
             }
             require(_shape < 10, 'shape ID not available');
-            require(!window[_x][_y].askedToPayRoyalties, 'user was asked to first settle royalty payment');
+            require(!window[_x][_y].askedToPayRoyalties, 'owner was asked to first settle royalty payment');
             if(window[_x][_y].owner == msg.sender){
                 window[_x][_y].color = _color;
                 window[_x][_y].shapeID = _shape;
 
-                uint pixelID = _x;
-                if(_y>0){
-                    pixelID = (_x * _y) + ((maxWidth - _x)*(_y -1));    
-                }
+                uint16 pixelID = _x + maxWidth * _y;
                 
                 pixelSVGs[pixelID] = generateShapeSVG(window[_x][_y].shapeID, _x * 9, _y * 9, window[_x][_y].color);
                 uniqueRows[_y] = true;
+                
+                emit PixelFilled (_x,_y);
+    
             }
         }
-        for(uint row = 0; row < 64;){
+        for(uint8 row = 0; row < 64;){
             if(uniqueRows[row]){
                 rowSVGs[row] = generateSVGRow(row);
             }
@@ -78,11 +118,11 @@ contract Pixelmap {
     }
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, color
-    function setPixelValue (uint[] memory xValues, uint[] memory yValues, uint[] memory priceValues) external {
+    function setPixelValue (uint8[] memory xValues, uint8[] memory yValues, uint256[] memory priceValues) external {
         require(xValues.length == yValues.length && xValues.length == priceValues.length, 'input arrays must be of the same length');
         
         uint length = xValues.length;
-        for (uint i = 0; i < length;) {
+        for (uint8 i = 0; i < length;) {
             require(!isOutOfBound(xValues[i], yValues[i]), 'A pixel is out of bounds');
             require(window[xValues[i]][yValues[i]].owner == msg.sender, 'only owner can set pixel value');
             unchecked{i++;}
@@ -91,18 +131,19 @@ contract Pixelmap {
         // Pay royalties for all pixels at once based on previous values
         payRoyalties(xValues, yValues);
         // set new pixel values
-        for (uint i = 0; i < length;) {
+        for (uint8 i = 0; i < length;) {
             window[xValues[i]][yValues[i]].price = priceValues[i];
+            emit PixelValueSet (xValues[i],yValues[i]);
             unchecked{i++;}
         }
     }
 
 
-    function payRoyalties (uint[] memory xValues, uint[] memory yValues) public {
+    function payRoyalties (uint8[] memory xValues, uint8[] memory yValues) public {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
-        for (uint i = 0; i < length; i++){
+        for (uint8 i = 0; i < length; i++){
             if (isOutOfBound(xValues[i],yValues[i])) {
                 revert('pixel is out of bounds');
             }
@@ -120,20 +161,22 @@ contract Pixelmap {
                     window[xValues[i]][yValues[i]].askedToPayRoyalties = false;
                     window[xValues[i]][yValues[i]].royaltyAskDate = 0;
                 }
+                emit RoyaltiesPaid (xValues[i], yValues[i]);
             }
         }
     }
 
-    function buyPixel(uint[] memory xValues, uint[] memory yValues) external {
+    function buyPixel(uint8[] memory xValues, uint8[] memory yValues) external {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
-        for (uint i = 0; i < length; ){
+        for (uint8 i = 0; i < length; ){
             if (isOutOfBound(xValues[i],yValues[i])) {
                 revert('pixel is out of bounds');
             }
             if(window[xValues[i]][yValues[i]].owner == address(0)){
                 window[xValues[i]][yValues[i]].owner = msg.sender;
+                balanceOf[msg.sender] += 1;
             }else{
                 uint royalties = calculateRoyalties(xValues[i], yValues[i]);
                 if(window[xValues[i]][yValues[i]].price > royalties){
@@ -142,21 +185,26 @@ contract Pixelmap {
                     require(currency.allowance(msg.sender, address(this)) >= window[xValues[i]][yValues[i]].price, 'insufficient allowance to buy pixel');
                     currency.transferFrom(msg.sender, window[xValues[i]][yValues[i]].owner, netPrice);
                     currency.transferFrom(msg.sender, manager, royalties);
+                    balanceOf[window[xValues[i]][yValues[i]].owner] -= 1;
+                    balanceOf[msg.sender] +=1;
                     window[xValues[i]][yValues[i]].owner = msg.sender;
                     window[xValues[i]][yValues[i]].royaltyLastPaid = block.timestamp;
                 }else{
                     require(currency.balanceOf(address(msg.sender)) > window[xValues[i]][yValues[i]].price, 'not sufficient balance to buy pixel');
                     require(currency.allowance(msg.sender, address(this)) >= window[xValues[i]][yValues[i]].price, 'insufficient allowance to buy pixel');
                     currency.transferFrom(msg.sender, manager, window[xValues[i]][yValues[i]].price);
+                    balanceOf[window[xValues[i]][yValues[i]].owner] -= 1;
+                    balanceOf[msg.sender] +=1;
                     window[xValues[i]][yValues[i]].owner = msg.sender;
                     window[xValues[i]][yValues[i]].royaltyLastPaid = block.timestamp;
                 }   
             }
+            emit PixelBought (xValues[i],yValues[i]);
             unchecked{i++;}
         }
     }
 
-    function seekRoyaltyPayment(uint x, uint y, uint _price) external isManager {
+    function seekRoyaltyPayment(uint8 x, uint8 y, uint _price) external isManager {
         if(window[x][y].askedToPayRoyalties && block.timestamp > window[x][y].royaltyAskDate + royaltyAskPeriod){
             window[x][y].price = _price;
             window[x][y].askedToPayRoyalties = false;
@@ -169,12 +217,12 @@ contract Pixelmap {
     }
 
     /// Function used to check the current status of the pixel at (x,y).
-    function checkPixel(uint x, uint y) public view returns(Pixel memory) {
+    function checkPixel(uint8 x, uint8 y) public view returns(Pixel memory) {
         require(x < maxWidth && y < maxHeight, 'pixel out of bounds');
         return window[x][y];
     }
 
-    function checkMultiplePixel (uint[] memory xValues, uint[] memory yValues) external view returns(Pixel[] memory) {
+    function checkMultiplePixel (uint8[] memory xValues, uint8[] memory yValues) external view returns(Pixel[] memory) {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         uint256 length = xValues.length;
         Pixel[] memory results = new Pixel[](length);
@@ -189,20 +237,81 @@ contract Pixelmap {
     }
 
     /// Function that checks whether the parameters are out of bound respect to the current window.
-    function isOutOfBound(uint x, uint y) internal pure returns(bool) {
+    function isOutOfBound(uint8 x, uint8 y) internal pure returns(bool) {
         return x < 0 || y < 0 || x >= maxWidth || y >= maxHeight;
     }
 
-    function calculateRoyalties(uint x, uint y) public view returns (uint) {
+    function calculateRoyalties(uint8 x, uint8 y) public view returns (uint) {
         uint timePeriod = block.timestamp - window[x][y].royaltyLastPaid;
         return (timePeriod * window[x][y].price * royaltyRate) / (360 days * royaltyDenominator);
+    }
+
+    /// Voting mechanism
+    function castVote(bool vote) external isVotingPeriod {
+        uint16 pixelsOwned = balanceOf[msg.sender];
+        require(pixelsOwned > 0, 'no pixels owned = no votes to be casted');
+        require(voteRegister[getCurrentCycle()].voted[msg.sender] == false, 'already voted');
+
+        if (vote) {
+            voteRegister[getCurrentCycle()].yesVotes += pixelsOwned;
+        } else {
+            voteRegister[getCurrentCycle()].noVotes += pixelsOwned;
+        }
+        voteRegister[getCurrentCycle()].voted[msg.sender] = true;
+        emit VoteCasted (msg.sender);
+    }
+
+    function checkVoteOutcome(uint32 _cycle) external {
+        require(_cycle < getCurrentCycle(), 'check vote outcomes only possible for concluded cycles');
+        uint256 totalVotes = voteRegister[_cycle].yesVotes + voteRegister[_cycle].noVotes;
+        require(totalVotes > 0, "No votes cast");
+
+        if (voteRegister[_cycle].yesVotes > totalVotes / 2){
+            nftContract.mint(manager);
+            emit NFTMinted(_cycle);
+            uint256 tokenID = nftContract.totalSupply() -1;
+            mintDates[tokenID] = block.timestamp;
+        }
+    }
+
+    function hasVoted(address _owner) external view returns (bool) {
+        return voteRegister[getCurrentCycle()].voted[_owner];
+    }
+    ///////
+
+    /// Period Management Functions
+
+    function getCurrentCycle() public view returns (uint) {
+        return ((block.timestamp - canvasCreation) / CYCLE_PERIOD);
+    }
+
+    function getMintDate( uint256 _tokenID) public view returns (uint) {
+        return mintDates[_tokenID];
+    }
+
+    function isInArtisticPeriod() public view returns (bool) {
+        uint cycleTime = (block.timestamp - canvasCreation) % CYCLE_PERIOD;
+        return cycleTime < ARTISTIC_PERIOD;
+    }
+
+    function isInVotingPeriod() public view returns (bool) {
+        return !isInArtisticPeriod();
+    }
+
+    ///////
+    function getBalance(address _owner) public view returns (uint) {
+        return balanceOf[_owner];
     }
 
     function updateCurrency(address _newToken) external isManager {
         currency = IERC20(address(_newToken));
     }
 
-    function generateShapeSVG(uint shapeID, uint x, uint y, string memory color) internal pure returns (string memory) {
+    function setNFTContract(address _nftContract) external isManager {
+        nftContract = CanvasCollection(_nftContract);
+    }
+
+    function generateShapeSVG(uint8 shapeID, uint8 x, uint8 y, string memory color) internal pure returns (string memory) {
         if (shapeID == 0) {
             return string(abi.encodePacked(
                 '<rect x="', uint2str(x) ,
@@ -276,11 +385,11 @@ contract Pixelmap {
     }
 
     // Function to generate SVG for 1 row by combining single pixel SVGs
-    function generateSVGRow(uint _row) internal view returns (string memory) {
+    function generateSVGRow(uint8 _row) internal view returns (string memory) {
         string memory svgString = '';
         
-        uint startID = 64 * _row;
-        uint endID = 64 + startID;
+        uint16 startID = 64 * _row;
+        uint16 endID = 64 + startID;
 
         for (uint i = startID; i < endID; i++) {
             svgString = string(abi.encodePacked(svgString, pixelSVGs[i]));

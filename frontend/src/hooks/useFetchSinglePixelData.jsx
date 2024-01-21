@@ -41,7 +41,7 @@ const useFetchSinglePixelData = () => {
                 royaltyLastPaid: pixel.royaltyLastPaid.toString(),
                 royaltyAskDate: pixel.royaltyAskDate.toString(),
             }));
-            localStorage.setItem('pixelData', JSON.stringify(newPixelsStringified));
+            sessionStorage.setItem('pixelData', JSON.stringify(newPixelsStringified));
     
             setPixels(newPixels);
             setUpdatedPixels([]);

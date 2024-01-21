@@ -1,5 +1,5 @@
 
-const Info = () => {
+const Info = ({ setInitialLoading }) => {
 
     return (
         <div className='container text-white'>

@@ -7,6 +7,8 @@ describe('PixelMap', function () {
   let weETHadd;
   let contract;
   let contractAddr;
+  let nftContract;
+  let nftContractAddr;
   let owner;
   let buyer;
   let manager;
@@ -19,9 +21,14 @@ describe('PixelMap', function () {
     wETH = await WETH.deploy();
     weETHadd = await wETH.getAddress();
 
-    const Pixelmap = await ethers.getContractFactory('Pixelmap');
+    const Pixelmap = await ethers.getContractFactory('contracts/Pixelmap.sol:Pixelmap');
     contract = await Pixelmap.connect(manager).deploy();
     contractAddr = await contract.getAddress();
+
+    const NFTContract = await ethers.getContractFactory('contracts/CanvasCollection.sol:CanvasCollection');
+    nftContract = await NFTContract.connect(manager).deploy(contractAddr);
+    nftContractAddr = await nftContract.getAddress();
+    await contract.connect(manager).setNFTContract(nftContractAddr);
 
     // give every test player sufficient currency to start with
     let initialMint = ethers.parseEther('10').toString();
@@ -104,6 +111,10 @@ describe('PixelMap', function () {
     await contract.connect(owner).buyPixel([x], [y]);
     const [owner3, shape3, price3, returnedColor3] = await contract.checkPixel(x, y);
     expect(owner3).to.equal(owner.address);
+    let balance1 = await contract.getBalance(buyer.address);
+    let balance2 = await contract.getBalance(owner.address);
+    expect(balance1).to.be.equal(0);
+    expect(balance2).to.be.equal(1);
 
   });
 
@@ -241,6 +252,63 @@ describe('PixelMap', function () {
     console.log(prevBalance, ethers.formatEther(BigInt( await wETH.balanceOf(manager.address))));
     
 
+
+  });
+
+  it('should revert color function calls outside of periods', async function () {
+    let inputArray = [];
+
+    let x1 = 1;
+    let y1 = 1;
+    let shape1 = 4;
+    let color1 = '#FF0000';
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    inputArray.push(input1);
+
+    await contract.connect(buyer).buyPixel([x1], [y1]);
+    let balance = await contract.connect(buyer).getBalance(buyer.address);
+    expect(balance).to.be.equal(1);
+    expect( contract.connect(buyer).castVote(true)).to.be.reverted;
+    //console.log('vote failed');
+
+    await time.increase(60*60*24*3 +3);
+    expect( contract.connect(buyer).fillPixel(inputArray) ).to.be.reverted;
+    await contract.connect(buyer).castVote(true);
+    expect( contract.connect(buyer).castVote(true) ).to.be.reverted;
+
+  });
+
+  it('should mint NFT', async function () {
+    let inputArray = [];
+
+    let x1 = 1;
+    let y1 = 1;
+    let shape1 = 4;
+    let color1 = '#FF0000';
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    inputArray.push(input1);
+
+    await contract.connect(buyer).buyPixel([x1], [y1]);
+    let balance = await contract.connect(buyer).getBalance(buyer.address);
+    expect(balance).to.be.equal(1);
+    await contract.connect(buyer).fillPixel(inputArray);
+    let rowSVG = await contract.getRowSVG();
+    console.log(rowSVG);
+
+    expect( contract.connect(buyer).castVote(true)).to.be.reverted;
+    console.log('vote failed');
+
+    await time.increase(60*60*24*3 +3);
+    expect( contract.connect(buyer).fillPixel(inputArray) ).to.be.reverted;
+    await contract.connect(buyer).castVote(true);
+    expect(contract.checkVoteOutcome()).to.be.reverted;
+
+    await time.increase(60*60*24*1 +3);
+    let response = await contract.checkVoteOutcome(0);
+    await response.wait();
+    
+    let response2 = await nftContract.tokenURI(0);
+    console.log(response2);
 
   });
 
