@@ -10,23 +10,19 @@
 // 8 - quarter circle, corner bottom right
 // 9 - quarter circle, corner bottom left
 
-export const createShape = (i, id, width, height, x, y, color, pixel, handleMouseOver, handlePixelClick, handleMouseDown, handleMouseUp, isDimmed ) => {
+
+export const createShape = (i, id, width, height, x, y, color, pixel, handleMouseOver, handlePixelClick, isDimmed) => {
     const noop = () => {};
     const onMouseOver = handleMouseOver || noop;
     const onClick = handlePixelClick || noop;
-    const onMouseDown = handleMouseDown || noop;
-    const onMouseUp = handleMouseUp || noop;
     
     const dimStyle = isDimmed ? { opacity: 0.3 } : {};
-    
     const commonProps = {
         key: i,
         style: dimStyle,
         fill:color,
         onMouseOver: (e) => onMouseOver(e, pixel),
-        onClick: () => onClick(pixel),
-        onMouseDown: () => onMouseDown(pixel),
-        onMouseUp: () => onMouseUp(),
+        onClick: () => onClick(pixel)
     };
 
     if(id == 0){

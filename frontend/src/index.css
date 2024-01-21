@@ -46,35 +46,3 @@ body,
   margin: 0;
 }
 
-/* Custom layout for color picker */
-.custom-layout .react-colorful {
-  padding: 4px;
-  border-radius: 0px;
-  background: #303030;
-  box-shadow: none;
-}
-
-.custom-layout .react-colorful__saturation {
-  margin: 0px;
-  border-radius: 0px;
-  border-bottom: none;
-}
-
-.custom-layout .react-colorful__hue {
-  margin-top: 4px;
-  order: 1;
-}
-
-.custom-layout .react-colorful__hue,
-.custom-layout .react-colorful__alpha {
-  height: 8px;
-  border-radius: 0px;
-}
-
-.custom-layout .react-colorful__hue-pointer,
-.custom-layout .react-colorful__alpha-pointer {
-  width: 8px;
-  height: 10px;
-  border-radius: 0px;
-  
-}

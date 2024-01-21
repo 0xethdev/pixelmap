@@ -7,12 +7,11 @@ contract Pixelmap {
     address public manager;
     uint public constant maxWidth = 64;
     uint public constant maxHeight = 64;
-    uint public royaltyRate = 50; // rate per 1'000
-    uint public constant royaltyDenominator = 1000;
+    uint public royaltyRate = 5000; // rate per 1'000'000
+    uint public constant royaltyDenominator = 1000000;
     uint public artisticPeriod = 10 days;
     uint public begArtisticPeriod;
     uint public endArtisticPeriod;
-    uint public constant royaltyAskPeriod = 3 days;
     uint private constant PIXEL_WIDTH_HEIGHT = 8;
 
     /// royalties are paid with wrapped ETH
@@ -24,8 +23,6 @@ contract Pixelmap {
         uint256 price;
         string color;
         uint royaltyLastPaid;
-        bool askedToPayRoyalties;
-        uint royaltyAskDate;
     }
     
     /// The window is a map that fits "width -> (height -> pixel)"
@@ -55,7 +52,6 @@ contract Pixelmap {
             revert('pixel is out of bounds');
             }
             require(_shape < 10, 'shape ID not available');
-            require(!window[_x][_y].askedToPayRoyalties, 'user was asked to first settle royalty payment');
             if(window[_x][_y].owner == msg.sender){
                 window[_x][_y].color = _color;
                 window[_x][_y].shapeID = _shape;
@@ -115,11 +111,6 @@ contract Pixelmap {
                 require(currency.allowance(msg.sender, address(this)) >= royalties, 'insufficient allowance to pay royalties');
                 currency.transferFrom(msg.sender, manager, royalties);
                 window[xValues[i]][yValues[i]].royaltyLastPaid = block.timestamp;
-
-                if(window[xValues[i]][yValues[i]].askedToPayRoyalties){
-                    window[xValues[i]][yValues[i]].askedToPayRoyalties = false;
-                    window[xValues[i]][yValues[i]].royaltyAskDate = 0;
-                }
             }
         }
     }
@@ -156,17 +147,7 @@ contract Pixelmap {
         }
     }
 
-    function seekRoyaltyPayment(uint x, uint y, uint _price) external isManager {
-        if(window[x][y].askedToPayRoyalties && block.timestamp > window[x][y].royaltyAskDate + royaltyAskPeriod){
-            window[x][y].price = _price;
-            window[x][y].askedToPayRoyalties = false;
-            window[x][y].royaltyAskDate = 0;
-
-        }else{
-            window[x][y].askedToPayRoyalties = true;
-            window[x][y].royaltyAskDate = block.timestamp;
-        }  
-    }
+    
 
     /// Function used to check the current status of the pixel at (x,y).
     function checkPixel(uint x, uint y) public view returns(Pixel memory) {
@@ -290,7 +271,7 @@ contract Pixelmap {
 
     // Function to generate the complete SVG grid based on single row SVGs
     function generateSVG() public view returns (string memory) {
-        string memory svgString = '<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">';
+        string memory svgString = '<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg">';
         
         for (uint i = 0; i < 64; i++) {
             svgString = string(abi.encodePacked(svgString, rowSVGs[i]));
