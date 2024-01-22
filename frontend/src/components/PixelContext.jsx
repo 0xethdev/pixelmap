@@ -25,7 +25,6 @@ export const PixelProvider = ({ children }) => {
                 uniqueXYPairs.push({ x, y });
             }
         })
-        console.log(uniqueXYPairs);
         setUpdatedPixels(uniqueXYPairs);
     };
 

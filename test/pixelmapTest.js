@@ -249,7 +249,7 @@ describe('PixelMap', function () {
     let response3 = await contract.checkPixel(x,y);
     expect(response3.owner).to.be.equal(thirdP.address);
     expect(response3.askedToPayRoyalties).to.be.equal(false);
-    console.log(prevBalance, ethers.formatEther(BigInt( await wETH.balanceOf(manager.address))));
+    //console.log(prevBalance, ethers.formatEther(BigInt( await wETH.balanceOf(manager.address))));
     
 
 
@@ -292,11 +292,9 @@ describe('PixelMap', function () {
     let balance = await contract.connect(buyer).getBalance(buyer.address);
     expect(balance).to.be.equal(1);
     await contract.connect(buyer).fillPixel(inputArray);
-    let rowSVG = await contract.getRowSVG();
-    console.log(rowSVG);
 
     expect( contract.connect(buyer).castVote(true)).to.be.reverted;
-    console.log('vote failed');
+    //console.log('vote failed');
 
     await time.increase(60*60*24*3 +3);
     expect( contract.connect(buyer).fillPixel(inputArray) ).to.be.reverted;
@@ -308,7 +306,51 @@ describe('PixelMap', function () {
     await response.wait();
     
     let response2 = await nftContract.tokenURI(0);
-    console.log(response2);
+    //console.log(response2);
+
+  });
+
+  it('should start NFT auction', async function () {
+    let inputArray = [];
+
+    let x1 = 1;
+    let y1 = 1;
+    let shape1 = 4;
+    let color1 = '#FF0000';
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    inputArray.push(input1);
+
+    await contract.connect(buyer).buyPixel([x1], [y1]);
+    let balance = await contract.connect(buyer).getBalance(buyer.address);
+    expect(balance).to.be.equal(1);
+    await contract.connect(buyer).fillPixel(inputArray);
+
+    await time.increase(60*60*24*3 +3);
+    await contract.connect(buyer).castVote(true);
+    
+
+    await time.increase(60*60*24*1 +3);
+    let response = await contract.checkVoteOutcome(0);
+    await response.wait();
+    
+    expect( contract.connect(thirdP).placeBid(1, {value:ethers.parseEther('0.1')})).to.be.reverted;
+    await contract.connect(thirdP).placeBid(0,{value: ethers.parseEther('0.1')});
+    expect( contract.connect(buyer).placeBid(0, {value:ethers.parseEther('0.05')})).to.be.reverted;
+    let balance1 = await ethers.provider.getBalance(thirdP.address);
+    await contract.connect(buyer).placeBid(0,{value: ethers.parseEther('0.2')});
+    let balance2 = await ethers.provider.getBalance(thirdP.address);
+    //console.log('balance 1', ethers.formatEther( balance1 ), 'balance 2', ethers.formatEther ( balance2 ));
+    
+    await time.increase(60*60*24*19);
+    expect( contract.connect(thirdP).placeBid(0, {value:ethers.parseEther('0.25')})).to.be.reverted;
+
+    await contract.closeAuction(0);
+    let nftOwner = await nftContract.ownerOf(0);
+    //console.log('nft owner', nftOwner, 'address', buyer.address)
+    expect( contract.connect(thirdP).placeBid(0, {value:ethers.parseEther('0.25')})).to.be.reverted;
+    expect( contract.closeAuction(0) ).to.be.reverted;
+    let auction = await contract.nftAuctions(0)
+    //console.log(auction)
 
   });
 

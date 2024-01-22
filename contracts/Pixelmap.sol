@@ -2,13 +2,16 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 
 interface CanvasCollection {
     function mint(address to) external;
     function totalSupply() external view returns (uint256);
+    function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
 }
 
-contract Pixelmap {
+contract Pixelmap is ReentrancyGuard {
     CanvasCollection public nftContract;
 
     address public manager;
@@ -19,6 +22,7 @@ contract Pixelmap {
     uint public constant ARTISTIC_PERIOD = 3 days;
     uint public constant VOTING_PERIOD = 1 days;
     uint public constant CYCLE_PERIOD = ARTISTIC_PERIOD + VOTING_PERIOD;
+    uint public constant AUCTION_DURATION = 18 hours;
     uint public canvasCreation;
     uint public constant royaltyAskPeriod = 3 days;
     uint private constant PIXEL_WIDTH_HEIGHT = 8;
@@ -41,6 +45,14 @@ contract Pixelmap {
         uint16 noVotes;
         mapping (address => bool) voted;
     }
+
+    struct Auction {
+        address winningAddr;
+        uint256 winningBid;
+        uint256 auctionStart;
+        uint256 auctionEnd;
+        bool auctionEnded;
+    }
     
     /// The window is a map that fits "width -> (height -> pixel)"
     mapping (uint8 => mapping (uint8 => Pixel)) public window;
@@ -52,10 +64,13 @@ contract Pixelmap {
     mapping (uint256 => Vote) public voteRegister;
     /// mapping tokenID to mint date
     mapping (uint256 => uint256) public mintDates;
-    
-    function getRowSVG() external view returns (string[64] memory){
-        return rowSVGs;
-    }
+    /// mapping tokenID to Auction
+    mapping (uint256 => Auction) public nftAuctions;
+
+
+    /// ================================================================================
+    /// MODIFIERS
+    /// ================================================================================
 
     modifier isManager {
         require(msg.sender == manager, "owner current manager can call this function");
@@ -72,17 +87,32 @@ contract Pixelmap {
         _;
     }
 
+    /// ================================================================================
+    /// EVENTS
+    /// ================================================================================
+
     event PixelBought (uint8 indexed x, uint8 indexed y);
     event PixelFilled (uint8 indexed x, uint8 indexed y);
     event PixelValueSet (uint8 indexed x, uint8 indexed y);
     event RoyaltiesPaid (uint8 indexed x, uint8 indexed y);
     event VoteCasted (address indexed owner);
     event NFTMinted(uint32 cycle);
+    event BidPlace(uint tokenID, address bidder, uint bid);
+    event AuctionEnded(uint tokenID, address bidder, uint bid);
+    event BidWithdrawn(uint tokenID, address bidder, uint bid);
+
+    /// ================================================================================
+    /// CONSTRUCTOR
+    /// ================================================================================
 
     constructor(){
         manager = msg.sender;
         canvasCreation = block.timestamp;
     }
+
+    /// ================================================================================
+    /// PIXEL FUNCTIONS
+    /// ================================================================================
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, shape, color
     function fillPixel( bytes[] memory _pixels ) external isArtisticPeriod {
@@ -246,6 +276,10 @@ contract Pixelmap {
         return (timePeriod * window[x][y].price * royaltyRate) / (360 days * royaltyDenominator);
     }
 
+    /// ================================================================================
+    /// MINT VOTE FUNCTIONS
+    /// ================================================================================
+
     /// Voting mechanism
     function castVote(bool vote) external isVotingPeriod {
         uint16 pixelsOwned = balanceOf[msg.sender];
@@ -267,19 +301,52 @@ contract Pixelmap {
         require(totalVotes > 0, "No votes cast");
 
         if (voteRegister[_cycle].yesVotes > totalVotes / 2){
-            nftContract.mint(manager);
+            nftContract.mint(address(this));
             emit NFTMinted(_cycle);
             uint256 tokenID = nftContract.totalSupply() -1;
             mintDates[tokenID] = block.timestamp;
+            nftAuctions[tokenID].auctionStart = block.timestamp;
+            nftAuctions[tokenID].auctionEnd = block.timestamp + AUCTION_DURATION;
         }
     }
 
     function hasVoted(address _owner) external view returns (bool) {
         return voteRegister[getCurrentCycle()].voted[_owner];
     }
-    ///////
 
-    /// Period Management Functions
+    /// ================================================================================
+    /// NFT AUCTION
+    /// ================================================================================
+    
+    function placeBid (uint256 _tokenID) external payable nonReentrant {
+        require(nftAuctions[_tokenID].auctionEnded == false, 'auction has ended already');
+        require(nftAuctions[_tokenID].auctionStart < block.timestamp, 'auction has not started yet');
+        require(nftAuctions[_tokenID].auctionEnd > block.timestamp, 'auction has already ended');
+
+        require(msg.value > nftAuctions[_tokenID].winningBid, 'higher bid already existing');
+        (bool sent, ) = nftAuctions[_tokenID].winningAddr.call{value: nftAuctions[_tokenID].winningBid}("");
+        require(sent, "Failed to send Ether");
+        
+        nftAuctions[_tokenID].winningBid = msg.value;
+        nftAuctions[_tokenID].winningAddr = msg.sender;
+
+        emit BidPlace(_tokenID, msg.sender, msg.value);
+    }
+    function closeAuction(uint _tokenID) public nonReentrant {
+        require(nftAuctions[_tokenID].auctionEnded == false, 'auction has ended already');
+        require(nftAuctions[_tokenID].auctionStart < block.timestamp, 'auction has not started yet');
+        require(nftAuctions[_tokenID].auctionEnd < block.timestamp, 'auction not ended yet');
+
+        nftAuctions[_tokenID].auctionEnded = true;
+        nftContract.safeTransferFrom(address(this), nftAuctions[_tokenID].winningAddr, _tokenID);
+        emit AuctionEnded(_tokenID, nftAuctions[_tokenID].winningAddr, nftAuctions[_tokenID].winningBid);
+    }
+
+
+
+    /// ================================================================================
+    /// PERIOD MANAGEMENT
+    /// ================================================================================
 
     function getCurrentCycle() public view returns (uint) {
         return ((block.timestamp - canvasCreation) / CYCLE_PERIOD);
@@ -298,6 +365,10 @@ contract Pixelmap {
         return !isInArtisticPeriod();
     }
 
+    /// ================================================================================
+    /// GETTER AND MANAGEMENT FUNCTIONS
+    /// ================================================================================
+
     ///////
     function getBalance(address _owner) public view returns (uint) {
         return balanceOf[_owner];
@@ -310,6 +381,10 @@ contract Pixelmap {
     function setNFTContract(address _nftContract) external isManager {
         nftContract = CanvasCollection(_nftContract);
     }
+
+    /// ================================================================================
+    /// ART FUNCTIONS
+    /// ================================================================================
 
     function generateShapeSVG(uint8 shapeID, uint8 x, uint8 y, string memory color) internal pure returns (string memory) {
         if (shapeID == 0) {
