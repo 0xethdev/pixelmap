@@ -354,4 +354,31 @@ describe('PixelMap', function () {
 
   });
 
+  it('should generate markle tree root', async function () {
+    let x1 = 63;
+    let y1 = 63;
+    let x2 = 12;
+    let y2 = 54;
+    let x3 = 34;
+    let y3 = 23;
+    
+    const accounts = await ethers.getSigners();
+    const mainAcct = accounts[16];
+    await contract.connect(mainAcct).buyPixel([x1, x2, x3], [y1, y2, y3]);
+    
+    let response = await contract.generateMerkle();
+    console.log('merkle root',response);
+
+    await time.increase(60*60*24*3 +3);
+    await contract.connect(mainAcct).castVote(true);
+
+    await time.increase(60*60*24*1 +3);
+    await contract.checkVoteOutcome(0);
+    
+    let response2 = await nftContract.tokenURI(0);
+    console.log(response2);
+
+
+  });
+
 });

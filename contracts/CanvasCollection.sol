@@ -6,6 +6,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
+interface Pixelmap {
+    function generateSVG() external view returns (string memory);
+    function generateMerkle() external view returns (bytes32);
+}
+
 contract CanvasCollection is ERC721A, Ownable {
     Pixelmap public pixelmapContract;
 
@@ -51,14 +56,20 @@ contract CanvasCollection is ERC721A, Ownable {
             )    
         );
     }
+    function getArtistMerkle() internal view returns (string memory){
+        bytes32 merkleRoot = pixelmapContract.generateMerkle();
+        return Strings.toHexString(uint256(merkleRoot), 32);
+    }
+
     function getTokenURI(uint256 tokenId) internal view returns (string memory){
+        
         bytes memory dataURI = abi.encodePacked(
             '{',
                 '"name": "Pixel Canvas #', Strings.toString(tokenId), '",',
                 '"external_url":"https://www.google.xyz/",',
                 '"description": "Created by a comunity of artists, builders, visionaries, investors and degens.",',
                 '"image": "', generateImage(), '",',
-                '"attributes":[{"Artist":""}]',
+                '"attributes":[{"Artist":"',getArtistMerkle(),'"}]',
             '}'
         );
         return string(
@@ -70,11 +81,6 @@ contract CanvasCollection is ERC721A, Ownable {
     }
 }
 
-
-
-interface Pixelmap {
-    function generateSVG() external view returns (string memory);
-}
 
 
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
+import "./Merkle.sol";
 
 interface CanvasCollection {
     function mint(address to) external;
@@ -30,6 +30,9 @@ contract Pixelmap is ReentrancyGuard {
     /// royalties are paid with wrapped ETH
     IERC20 currency = IERC20(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
     
+    Merkle artistMerkle = new Merkle();
+
+
     struct Pixel {
         address owner;
         uint shapeID;
@@ -51,8 +54,7 @@ contract Pixelmap is ReentrancyGuard {
         uint winningBid;
         uint auctionStart;
         uint auctionEnd;
-        bool auctionEnded;
-        
+        bool auctionEnded;   
     }
     
     /// The window is a map that fits "width -> (height -> pixel)"
@@ -67,6 +69,7 @@ contract Pixelmap is ReentrancyGuard {
     mapping (uint => uint) public mintDates;
     /// mapping tokenID to Auction
     mapping (uint => Auction) public nftAuctions;
+    /// mapping tokenID to address to with
 
 
     /// ================================================================================
@@ -116,7 +119,7 @@ contract Pixelmap is ReentrancyGuard {
     /// ================================================================================
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, shape, color
-    function fillPixel( bytes[] memory _pixels ) external isArtisticPeriod {
+    function fillPixel( bytes[] calldata _pixels ) external isArtisticPeriod {
         uint length = _pixels.length;
         bool[] memory uniqueRows = new bool[](64);
         
@@ -149,7 +152,7 @@ contract Pixelmap is ReentrancyGuard {
     }
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, color
-    function setPixelValue (uint[] memory xValues, uint[] memory yValues, uint[] memory priceValues) external {
+    function setPixelValue (uint[] calldata xValues, uint[] calldata yValues, uint[] calldata priceValues) external {
         require(xValues.length == yValues.length && xValues.length == priceValues.length, 'input arrays must be of the same length');
         
         uint length = xValues.length;
@@ -170,7 +173,7 @@ contract Pixelmap is ReentrancyGuard {
     }
 
 
-    function payRoyalties (uint[] memory xValues, uint[] memory yValues) public {
+    function payRoyalties (uint[] calldata xValues, uint[] calldata yValues) public {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
@@ -197,7 +200,7 @@ contract Pixelmap is ReentrancyGuard {
         }
     }
 
-    function buyPixel(uint[] memory xValues, uint[] memory yValues) external {
+    function buyPixel(uint[] calldata xValues, uint[] calldata yValues) external {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
@@ -253,7 +256,7 @@ contract Pixelmap is ReentrancyGuard {
         return window[x][y];
     }
 
-    function checkMultiplePixel (uint[] memory xValues, uint[] memory yValues) external view returns(Pixel[] memory) {
+    function checkMultiplePixel (uint[] calldata xValues, uint[] calldata yValues) external view returns(Pixel[] memory) {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         uint length = xValues.length;
         Pixel[] memory results = new Pixel[](length);
@@ -338,12 +341,20 @@ contract Pixelmap is ReentrancyGuard {
         require(nftAuctions[_tokenID].auctionStart < block.timestamp, 'auction has not started yet');
         require(nftAuctions[_tokenID].auctionEnd < block.timestamp, 'auction not ended yet');
 
-        nftAuctions[_tokenID].auctionEnded = true;
-        nftContract.safeTransferFrom(address(this), nftAuctions[_tokenID].winningAddr, _tokenID);
-        emit AuctionEnded(_tokenID, nftAuctions[_tokenID].winningAddr, nftAuctions[_tokenID].winningBid);
+        if(nftAuctions[_tokenID].winningAddr == address(0)){
+            uint randomX = uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 64;
+            uint randomY = uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 64;
+
+            nftAuctions[_tokenID].auctionEnded = true;
+            nftContract.safeTransferFrom(address(this), window[randomX][randomY].owner, _tokenID);
+            emit AuctionEnded(_tokenID, window[randomX][randomY].owner, 0);
+
+        }else{
+            nftAuctions[_tokenID].auctionEnded = true;
+            nftContract.safeTransferFrom(address(this), nftAuctions[_tokenID].winningAddr, _tokenID);
+            emit AuctionEnded(_tokenID, nftAuctions[_tokenID].winningAddr, nftAuctions[_tokenID].winningBid);
+        }
     }
-
-
 
     /// ================================================================================
     /// PERIOD MANAGEMENT
@@ -506,5 +517,18 @@ contract Pixelmap is ReentrancyGuard {
             _i /= 10;
         }
         return string(bstr);
+    }
+
+    function generateMerkle () external view returns (bytes32) {
+        bytes32[] memory data = new bytes32[](4096);
+        for (uint y = 0; y < 64;){
+            for(uint x = 0; x < 64;){
+                uint pixelID = x + 64 * y;
+                data[pixelID] = bytes32(uint256(uint160(window[x][y].owner)) << 96);
+                unchecked{x++;}
+            }
+            unchecked{y++;}
+        }
+        return artistMerkle.getRoot(data);
     }
 }

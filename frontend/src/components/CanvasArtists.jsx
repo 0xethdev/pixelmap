@@ -1,27 +1,28 @@
 import { useState, useEffect } from 'react'
-import { MerkleTree } from 'merkletreejs';
-import keccak256 from 'keccak256';
-import { fetchEnsName } from '@wagmi/core'
-
+import { fetchEnsName, readContract } from '@wagmi/core'
+import Pixelmap from '../../src/artifacts/contracts/Pixelmap.sol/Pixelmap.json';
+import contractAddr from '../hooks/contractAddr';
 
 const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
 
 const CanvasArtists = ({ pixels }) => {
-    const [oneArtist, setOneArtist] = useState('');
+    const [oneArtist, setOneArtist] = useState('[generating signature....]');
     const [ownerNames, setOwnerNames] = useState({});
 
     useEffect(() => {
-        const createArtistMerkleTree = (pixels) => {
-            const leaves = pixels.map(pixel => keccak256(pixel.owner));
-            const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
-            const root = tree.getRoot();
-    
-            let artistHex = '0x' + root.toString('hex');
-            setOneArtist(artistHex);
+        const fetchArtistMerkleTree = async () => {
+            console.log('fetching merkle tree...')
+            const fetchedRoot= await readContract({
+                address: contractAddr,
+                abi: Pixelmap.abi,
+                functionName: 'generateMerkle',
+                args:[],
+            });
+            setOneArtist(fetchedRoot);
         }
-        createArtistMerkleTree(pixels);
+        fetchArtistMerkleTree();
 
         {/* 
         const fetchOwnerNames = async () => {

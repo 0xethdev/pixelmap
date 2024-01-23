@@ -9,7 +9,7 @@ async function main() {
     const pixelmap = new ethers.Contract(marketPlaceAddr, Pixelmap.abi, mainAcct);
     
 
-    const txn1 = await pixelmap.checkVoteOutcome(0);
+    const txn1 = await pixelmap.closeAuction(0);
     console.log(txn1.hash);
     
 }
@@ -21,4 +21,4 @@ main()
         process.exit(1);
     });
 
-// npx hardhat run --network localhost scripts/mintNFT.js
+// npx hardhat run --network localhost scripts/closeAuction.js

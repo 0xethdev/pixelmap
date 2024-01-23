@@ -28,13 +28,12 @@ export const NFTDataProvider = ({ children }) => {
                 });
                 const json = atob(tokenURIFetched.substring(29));
                 const result = JSON.parse(json);
-                
                 let nft = {
                     name: result.name,
                     description: result.description,
-                    image:result.image
+                    image:result.image,
+                    artist:result.attributes[0].Artist,
                 }
-                //console.log(nft);
                 allNFTs.push(nft);
             }
             setNftData(allNFTs);

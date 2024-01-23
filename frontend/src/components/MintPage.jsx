@@ -9,6 +9,8 @@ import Pixelmap from '../../src/artifacts/contracts/Pixelmap.sol/Pixelmap.json';
 import contractAddr from '../hooks/contractAddr';
 import CanvasCollection from '../../src/artifacts/contracts/CanvasCollection.sol/CanvasCollection.json';
 import nftContractAddr from '../hooks/nftContractAddr';
+import { Utils } from 'alchemy-sdk'
+import SpinningLoader from  '../assets/spinningLoader'
 
 const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
@@ -45,6 +47,12 @@ const MintPage = ({ setInitialLoading }) => {
     const [galleryID, setGalleryID] = useState(0);
     const [currentOwner, setCurrentOwner] = useState('');
     const [mintDate, setMintDate] = useState(0);
+    const [showAuction, setShowAuction] = useState(false);
+    const [auctionEnd, setAuctionEnd] = useState(0);
+    const [highestBid, setHighestBid] = useState(0);
+    const [highestBidder, setHighestBidder] = useState('');
+    const [etherBid, setEtherBid] = useState(0);
+    const [updateBidResults, setUpdateBidResults] = useState(false);
     
     const squareSize = 5; // Size of each square
     const gap = 1; // Gap between squares
@@ -95,7 +103,52 @@ const MintPage = ({ setInitialLoading }) => {
         }
         fetchMintDate();
 
-    },[showGallery, currentOwner, mintDate, galleryID]);
+        const calculateTimeLeft = (endTimeInput) => {
+            const now = new Date();
+            const endTime = new Date(endTimeInput*1000);
+            const difference = endTime - now;
+
+            let timeLeft = '';
+
+            if (difference > 0) {
+                const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((difference / 1000 / 60) % 60);
+                const sec = Math.floor((difference / 1000) % 60);
+                timeLeft = `${days}D : ${hours}H : ${minutes}M : ${sec}s`;
+            }
+            return timeLeft;
+        };
+        
+        const fetchAuctionInfo = async () =>{
+            const fetchAuction = await readContract({
+                address: contractAddr,
+                abi: Pixelmap.abi,
+                functionName: 'nftAuctions',
+                args:[galleryID]
+            });
+            //console.log(fetchAuction);
+            setAuctionEnd(calculateTimeLeft(Number(fetchAuction[3])));
+            setHighestBid(Number(fetchAuction[1]));
+            setHighestBidder(fetchAuction[0]);
+            setShowAuction(fetchAuction[5]);
+        }
+
+        if(galleryID == nftData.length-1){
+            const timer = setInterval(() => {
+                setTimeLeft(fetchAuctionInfo());
+            }, 1000);
+            return () => clearInterval(timer);
+        }else{
+            setShowAuction(false);
+        }
+
+        if(updateBidResults){
+            fetchAuctionInfo();
+            setUpdateBidResults(false);
+        }
+
+    },[showGallery, currentOwner, mintDate, galleryID, updateBidResults]);
 
 
     useEffect(() => {
@@ -170,8 +223,7 @@ const MintPage = ({ setInitialLoading }) => {
         }
         
 
-    },[updateResults, yesVotes, noVotes, totalVotes, userBalance, isConnected]);
-
+    },[updateResults, yesVotes, noVotes, totalVotes, userBalance, isConnected, showGallery]);
 
     /// HANDLE VOTING FUNCTION  
     const { isLoading:voteLoad, write: castVote } = useContractWrite({
@@ -195,6 +247,41 @@ const MintPage = ({ setInitialLoading }) => {
         abi: Pixelmap.abi,
         eventName: 'VoteCasted',
         listener:handleVotingEvent,
+    });
+
+    /// HANDLE BIDDING FUNCTION
+
+    const handlePriceChange = (e) => {
+        const newValue = e.target.value;
+        if (newValue === '' || (/^\d*\.?\d{0,4}$/.test(newValue) && Number(newValue) >= 0)) {
+            setEtherBid(newValue);
+        }
+      };
+
+
+    const { isLoading:bidLoad, write: placeBid } = useContractWrite({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        functionName: 'placeBid',
+        onSuccess(){
+            setUpdateBidResults(true);
+        }
+    });
+    async function handleBidding() {        
+        if(etherBid > 0){
+            await placeBid({ args: [galleryID], value: Utils.parseEther(etherBid) });
+        }
+    }
+
+    const handleBiddingEvent = (event) => {
+        setUpdateBidResults(true);
+    };
+
+    useContractEvent({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        eventName: 'BidPlace',
+        listener:handleBiddingEvent,
     })
 
     
@@ -243,8 +330,8 @@ const MintPage = ({ setInitialLoading }) => {
                     </div>
                     <div className='p-1 flex flex-row items-center w-full mt-10 text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
                         <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
-                            <div>Total Art Works</div>
-                            <div className='text-sm text-lightgrey'>{nftData.length}</div>
+                            <div>Artist Signature</div>
+                            <div className='text-sm text-lightgrey'>{truncateAddress(nftData[galleryID].artist)}</div>
                         </div>
                         <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
                             <div>Mint Date</div>
@@ -252,9 +339,48 @@ const MintPage = ({ setInitialLoading }) => {
                         </div>
                         <div className='flex flex-col items-center w-1/3'>
                             <div>Current Owner</div>
-                            <div className='text-sm text-lightgrey'>{truncateAddress(currentOwner)}</div>
+                            <div className='text-sm text-lightgrey'>{currentOwner ==  address? 'you' : truncateAddress(currentOwner)}</div>
                         </div>
                     </div>
+                    {showAuction && (
+                        <div className='p-1 flex flex-row items-center w-full mt-4 text-offblack font-connection text-xs border-2 border-lightgrey bg-white'>                          
+                            <div className='flex flex-col items-center w-1/4 '>
+                                <div className='text-sm'>Auction Ongoing</div>
+                            </div>
+                            <div className='flex flex-col items-center w-1/4 border-r-2 border-lightrey'>
+                                <div>Auction Ends</div>
+                                <div className='text-sm'>{auctionEnd}</div>
+                            </div>
+                            <div className='flex flex-col items-center w-1/4 border-r-2 border-lightrey'>
+                                <div className='text-sm'>Current Bid: {Utils.formatEther(BigInt(highestBid))} ETH</div>
+                                <div>by { highestBidder == address ? 'you' : truncateAddress(highestBidder)}</div>
+                            </div>
+                            <div className='flex flex-col w-1/4 pl-4 pr-2'>
+                                <div className='flex flex-row items-center justify-between gap-3 text-sm'>
+                                    <div >
+                                        <input type="text" value={etherBid} onChange={(e) =>handlePriceChange(e)} step="0.01" className='bg-white text-black text-center border-b-2 max-w-[50px]' />
+                                        ETH
+                                    </div>
+                                    <button 
+                                        className={`text-xs py-1 px-2 border-2 flex items-center justify-between gap-2
+                                                    ${isConnected ? 'bg-black text-lightgrey border-darkgrey hover:bg-lightgrey hover:text-black hover:border-lightgrey' : 'bg-darkgrey text-lightgrey border-darkgrey'} 
+                                                    ${!isConnected && 'cursor-not-allowed'}`} 
+                                        disabled={!isConnected || bidLoad}
+                                        onClick={() => handleBidding()}
+                                    >
+                                    <span>
+                                        {bidLoad ? 'Processing...' : isConnected ? 'place bid' : 'please connect' }
+                                    </span>
+                                        {bidLoad ?
+                                            <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
+                                        : isConnected ?  
+                                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M15 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2v-2h2v2H9zm-2 2v-2h2v2H7zm-2 0h2v2H5v-2zm-2-2h2v2H3v-2zm0 0H1v-2h2v2zm8 2h2v2h-2v-2zm4-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2h-2v2h2V8zm0 0h2V6h-2v2z" fill="currentColor"/> </svg>
+                                        : null}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             :
                 <div>
