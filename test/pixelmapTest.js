@@ -367,7 +367,7 @@ describe('PixelMap', function () {
     await contract.connect(mainAcct).buyPixel([x1, x2, x3], [y1, y2, y3]);
     
     let response = await contract.generateMerkle();
-    console.log('merkle root',response);
+    //console.log('merkle root',response);
 
     await time.increase(60*60*24*3 +3);
     await contract.connect(mainAcct).castVote(true);
@@ -376,8 +376,30 @@ describe('PixelMap', function () {
     await contract.checkVoteOutcome(0);
     
     let response2 = await nftContract.tokenURI(0);
-    console.log(response2);
+    //console.log(response2);
 
+
+  });
+
+  it('should end NFT auction and set proceeds', async function () {
+    let x1 = 1;
+    let y1 = 1;
+    await contract.connect(buyer).buyPixel([x1], [y1]);
+    await time.increase(60*60*24*3 +3);
+    await contract.connect(buyer).castVote(true);
+    
+    await time.increase(60*60*24*1 +3);
+    let response = await contract.checkVoteOutcome(0);
+    await response.wait();
+    
+    await contract.connect(thirdP).placeBid(0,{value: ethers.parseEther('5000')});
+    await time.increase(60*60*24*19);
+    
+    await contract.closeAuction(0);
+    let balance1 = await ethers.provider.getBalance(buyer.address);
+    await contract.connect(buyer).withdrawPixelProceeds(0)
+    let balance2 = await ethers.provider.getBalance(buyer.address);
+    console.log(ethers.formatEther(balance1), ethers.formatEther(balance2), ethers.formatEther(balance2 - balance1));
 
   });
 

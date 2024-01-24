@@ -56,6 +56,10 @@ contract Pixelmap is ReentrancyGuard {
         uint auctionEnd;
         bool auctionEnded;   
     }
+    /// maps nft tokenID => address => tokenBalance
+    mapping (uint => mapping (address => uint)) public auctionClaims;
+    /// maps nft tokenID => address => bool Claimed
+    mapping (uint => mapping (address => bool)) public auctionClaimsFlag;
     
     /// The window is a map that fits "width -> (height -> pixel)"
     mapping (uint => mapping (uint => Pixel)) public window;
@@ -354,6 +358,31 @@ contract Pixelmap is ReentrancyGuard {
             nftContract.safeTransferFrom(address(this), nftAuctions[_tokenID].winningAddr, _tokenID);
             emit AuctionEnded(_tokenID, nftAuctions[_tokenID].winningAddr, nftAuctions[_tokenID].winningBid);
         }
+
+        for (uint x = 0; x < 64;) {
+            for (uint y = 0; y < 64;) {
+                address owner = window[x][y].owner;
+                auctionClaims[_tokenID][owner] = balanceOf[owner];
+                unchecked{y++;}
+            }
+            unchecked{x++;}
+        }
+    }
+
+    function withdrawPixelProceeds(uint _tokenID) external nonReentrant {
+        require(auctionClaimsFlag[_tokenID][msg.sender] == false, 'already claimed proceeds for this ID');
+        
+        uint auctionProceeds = nftAuctions[_tokenID].winningBid;
+        uint totalWithdrawAmount = auctionProceeds * auctionClaims[_tokenID][msg.sender] / 4096;
+
+        require(totalWithdrawAmount > 0, "No proceeds to withdraw");
+        auctionClaimsFlag[_tokenID][msg.sender] = true;
+        (bool sent, ) = msg.sender.call{value: totalWithdrawAmount}("");
+        require(sent, "Failed to send proceeds");
+    }
+
+    function getAuctionClaims(uint tokenID) external view returns (uint){
+        return auctionClaims[tokenID][msg.sender];
     }
 
     /// ================================================================================
