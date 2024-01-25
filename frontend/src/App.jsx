@@ -11,6 +11,7 @@ import NavBar from './components/NavBar'
 import Canvas from './components/Canvas'
 import Info from './components/Info'
 import MintPage from './components/MintPage'
+import FAQ from './components/FAQ'
 import Banner from './components/Banner'
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
                     <Route exact path="/" element={<Canvas setInitialLoading={setInitialLoading} />}/>
                     <Route exact path="/Info" element={<Info setInitialLoading={setInitialLoading}/>}/>
                     <Route exact path="/Mint" element={<MintPage setInitialLoading={setInitialLoading}/>}/>
+                    <Route exact path="/FAQ" element={<FAQ setInitialLoading={setInitialLoading}/>}/>
                   </Routes>
                 </main>
               </NFTDataProvider>

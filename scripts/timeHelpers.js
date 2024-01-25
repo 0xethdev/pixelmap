@@ -2,7 +2,8 @@ const { time } = require('@nomicfoundation/hardhat-network-helpers');
 
 async function main() {
   // advance time by one hour and mine a new block
-  await time.increase(60*60*24*3+3);
+  await time.increase(60*60*24*1+3);
+  //await time.increase(60*60*3);
 
   //console.log(await time.latest());
 

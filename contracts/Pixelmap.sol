@@ -381,8 +381,11 @@ contract Pixelmap is ReentrancyGuard {
         require(sent, "Failed to send proceeds");
     }
 
-    function getAuctionClaims(uint tokenID) external view returns (uint){
-        return auctionClaims[tokenID][msg.sender];
+    function getAuctionClaims(uint tokenID, address user) external view returns (uint){
+        return auctionClaims[tokenID][user];
+    }
+    function getAuctionClaimFlag(uint tokenID, address user) external view returns (bool){
+        return auctionClaimsFlag[tokenID][user];
     }
 
     /// ================================================================================

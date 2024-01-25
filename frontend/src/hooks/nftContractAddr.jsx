@@ -1,2 +1,2 @@
-const nftContractAddr = '0x564Db7a11653228164FD03BcA60465270E67b3d7'
+const nftContractAddr = '0x9abb5861e3a1eDF19C51F8Ac74A81782e94F8FdC'
 export default nftContractAddr

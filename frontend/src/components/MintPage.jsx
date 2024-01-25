@@ -53,6 +53,8 @@ const MintPage = ({ setInitialLoading }) => {
     const [highestBidder, setHighestBidder] = useState('');
     const [etherBid, setEtherBid] = useState(0);
     const [updateBidResults, setUpdateBidResults] = useState(false);
+    const [claimsOwnership, setClaimsOwnership] = useState(0);
+    const [claimFlag, setClaimFlag] = useState(false);
     
     const squareSize = 5; // Size of each square
     const gap = 1; // Gap between squares
@@ -81,6 +83,42 @@ const MintPage = ({ setInitialLoading }) => {
     },[])
 
     useEffect(() => {
+        const fetchClaimInfo = async () => {
+            const fetchClaim = await readContract({
+                address: contractAddr,
+                abi: Pixelmap.abi,
+                functionName: 'getAuctionClaims',
+                args:[galleryID, address]
+            });
+            setClaimsOwnership(Number(fetchClaim));
+
+            const fetchClaimFlag = await readContract({
+                address: contractAddr,
+                abi: Pixelmap.abi,
+                functionName: 'getAuctionClaimFlag',
+                args:[galleryID, address]
+            });
+            console.log(fetchClaimFlag)
+            setClaimFlag(fetchClaimFlag);
+
+            const fetchAuction = await readContract({
+                address: contractAddr,
+                abi: Pixelmap.abi,
+                functionName: 'nftAuctions',
+                args:[galleryID]
+            });
+            setHighestBid(Number(fetchAuction[1]));
+            
+        }
+
+        if(isConnected && !showAuction){
+            fetchClaimInfo();
+        }
+        
+
+    },[isConnected, showAuction, claimFlag]);
+
+    useEffect(() => {
         const fetchCurrentOwner = async () =>{
             const fetchOwner = await readContract({
                 address: nftContractAddr,
@@ -100,6 +138,7 @@ const MintPage = ({ setInitialLoading }) => {
                 args:[galleryID],
             });
             setMintDate(formatDate(fetchedMintDate));
+            
         }
         fetchMintDate();
 
@@ -131,7 +170,7 @@ const MintPage = ({ setInitialLoading }) => {
             setAuctionEnd(calculateTimeLeft(Number(fetchAuction[3])));
             setHighestBid(Number(fetchAuction[1]));
             setHighestBidder(fetchAuction[0]);
-            setShowAuction(fetchAuction[5]);
+            setShowAuction(!fetchAuction[4]);
         }
 
         if(galleryID == nftData.length-1){
@@ -250,7 +289,6 @@ const MintPage = ({ setInitialLoading }) => {
     });
 
     /// HANDLE BIDDING FUNCTION
-
     const handlePriceChange = (e) => {
         const newValue = e.target.value;
         if (newValue === '' || (/^\d*\.?\d{0,4}$/.test(newValue) && Number(newValue) >= 0)) {
@@ -284,7 +322,19 @@ const MintPage = ({ setInitialLoading }) => {
         listener:handleBiddingEvent,
     })
 
-    
+    /// HANDLE CLAIM FUNCTION
+    const { isLoading:claimLoad, write: proceedClaim } = useContractWrite({
+        address: contractAddr,
+        abi: Pixelmap.abi,
+        functionName: 'withdrawPixelProceeds',
+        onSuccess(){
+            setClaimFlag(true);
+        }
+    });
+    async function handleClaim() {        
+        await proceedClaim({ args: [galleryID] });
+        
+    }
 
     return (
         <div className='container'>
@@ -381,6 +431,48 @@ const MintPage = ({ setInitialLoading }) => {
                             </div>
                         </div>
                     )}
+                    {isConnected && !showAuction && claimsOwnership > 0 && (
+                        <div className='p-1 flex flex-row items-center w-full mt-4 text-offblack font-connection text-xs border-2 border-lightgrey bg-white'>                          
+                            <div className='flex flex-col items-center w-1/4 border-r-2 border-lightrey'>
+                                <div className='text-sm'>This Canvas Auction has Ended</div>
+                                <div className='text-sm'>Auction Price: {Utils.formatEther(BigInt(highestBid))} ETH</div>
+                            </div>
+                            <div className='flex flex-col items-center w-1/4 border-r-2 border-lightrey'>
+                                <div>At auction end you owned</div>
+                                <div className='text-sm'>{claimsOwnership}/4096 pixels</div>
+                            </div>
+                            <div className='flex flex-col items-center w-1/4 border-r-2 border-lightrey'>
+                                <div>You can claim:</div>
+                                <div className='text-sm'> {Math.round(Utils.formatEther(BigInt(highestBid))*claimsOwnership/4096*1000)/1000} ETH from the sale</div>
+                            </div>
+                            <div className='flex flex-col w-1/4 pl-4 pr-2'>
+                                <div className='flex flex-row items-center justify-center gap-3 text-sm'>
+                                    {claimFlag ?
+                                    <div className='text-xs'>
+                                        you already claimed proceeds for this canvas!
+                                    </div>
+                                :
+                                    <button 
+                                            className='text-xs py-1 px-2 border-2 flex items-center justify-between gap-2 bg-black text-lightgrey border-darkgrey hover:bg-lightgrey hover:text-black hover:border-lightgrey'
+                                            disabled={!isConnected || claimLoad}
+                                            onClick={() => handleClaim()}
+                                        >
+                                        <span>
+                                            {claimLoad ? 'Processing...' : 'claim'}
+                                        </span>
+                                            {claimLoad ?
+                                                <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
+                                            : isConnected ?  
+                                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M15 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2v-2h2v2H9zm-2 2v-2h2v2H7zm-2 0h2v2H5v-2zm-2-2h2v2H3v-2zm0 0H1v-2h2v2zm8 2h2v2h-2v-2zm4-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2h-2v2h2V8zm0 0h2V6h-2v2z" fill="currentColor"/> </svg>
+                                            : null}
+                                    </button>
+                                
+                                }    
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             :
                 <div>

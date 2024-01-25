@@ -1,6 +1,6 @@
 const Pixelmap = require('../frontend/src/artifacts/contracts/Pixelmap.sol/Pixelmap.json');
 
-marketPlaceAddr = "0x02e8910B3B89690d4aeC9fcC0Ae2cD16fB6A4828";
+marketPlaceAddr = "0x564Db7a11653228164FD03BcA60465270E67b3d7";
 
 async function main() {
     let x1 = 63;

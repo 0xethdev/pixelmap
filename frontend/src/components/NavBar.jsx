@@ -36,7 +36,7 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
                                 selectedPage={selectedPage}
                                 setSelectedPage={setSelectedPage} />
                         </ NavLink>
-                        <NavLink to='/'>
+                        <NavLink to='/FAQ'>
                             <NavBarButton
                                 page="FAQ"
                                 selectedPage={selectedPage}
@@ -45,12 +45,6 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
                         <NavLink to='/Mint'>
                             <NavBarButton
                                 page="Mint"
-                                selectedPage={selectedPage}
-                                setSelectedPage={setSelectedPage} />
-                        </ NavLink>
-                        <NavLink to='/'>
-                            <NavBarButton
-                                page="Chat"
                                 selectedPage={selectedPage}
                                 setSelectedPage={setSelectedPage} />
                         </ NavLink>
