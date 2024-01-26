@@ -19,12 +19,23 @@ module.exports = {
         center: true,
         padding: "0px",
       },
+      screens: {
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+      }
     },
-    screens: {
+    
+  },
+  plugins: [],
+}
+
+{/**
+
+screens: {
       xs: "480px",
       sm: "768px",
       md: "1060px"
     }
-  },
-  plugins: [],
-}
+
+*/}

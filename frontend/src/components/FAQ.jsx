@@ -79,12 +79,12 @@ const FAQ = ({ setInitialLoading }) => {
 
     return (
         <div className="container">
-            <div className='flex flex-col items-center justify-center mt-10 mb-10 '>
-                <div className='flex flex-col mb-20 w-[60%] justify-start items-start text-left font-connection text-xs p-3 border-offblack border-2'>
+            <div className='flex flex-col items-center justify-center md:mt-10 mt-4 mb-10 '>
+                <div className='flex flex-col mb-20 md:w-[60%] w-[90%] justify-start items-start text-left font-connection text-xs p-3 border-offblack border-2'>
                 {faqData.map((faq, index) => (
                     
                     <div key={index}
-                        className='border-b-2 border-offblack text-left text-white text-xs p-2 w-full'
+                        className='border-b-2 border-offblack text-left text-white md:text-xs text-sm p-2 w-full'
                         onClick={() => toggleFAQ(index)}
                     >
                         {index +1}. {faq.question}
