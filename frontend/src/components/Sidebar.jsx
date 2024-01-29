@@ -10,12 +10,44 @@ import SpinningLoader from  '../assets/spinningLoader'
 
 const wETH_ABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"},{"name":"wad","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"src","type":"address"},{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"wad","type":"uint256"}],"name":"withdraw","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"deposit","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"guy","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Withdrawal","type":"event"}];
 
-const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
+function useWindowSize() {
+    const [windowSize, setWindowSize] = useState({
+      width: undefined,
+      height: undefined,
+    });
+  
+    useEffect(() => {
+      function handleResize() {
+        setWindowSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      }
+  
+      window.addEventListener('resize', handleResize);
+      
+      // Call handleResize immediately to set the initial size
+      handleResize();
+  
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
+  
+    return windowSize;
+}
+
+const Sidebar = ({isOpen, onClose, selectedPixels, removePixel, setSelectedPixels }) => {
     const [totalPrice, setTotalPrice] = useState(0);
     const [currencyApproval, setCurrencyApproval] = useState(false);
     const { isConnected } = useAccount();
     const { tokenBalance, tokenAllowance, refreshBalanceData } = useContext(UserBalanceContext);
     const { setUpdatedPixels } = useContext(PixelContext);
+    const { width } = useWindowSize();
+    
+    const breakpoints = {
+        sm: 640,
+        md: 768,
+        lg: 1024,
+    };
 
     useEffect(() => {
         const calculateTotalPrice = () => {
@@ -28,9 +60,11 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
         calculateTotalPrice();
     },[selectedPixels]);
 
+    
     useEffect(() => {
-        if(!isConnected) setSelectedPixels([]);
+        if(!isOpen && !isConnected) setSelectedPixels([]);
     },[isConnected]);
+    
 
     const renderShape = (shapeID, color) => {
         const size = 12;
@@ -95,7 +129,14 @@ const Sidebar = ({ selectedPixels, removePixel, setSelectedPixels }) => {
 
     if (selectedPixels.length === 0) return null;
     return (
-        <div className='flex flex-col w-[80%] p-2 text-white font-connection border-2 border-darkgrey bg-offblack'>
+        <div className='flex flex-col md:w-[80%] w-full h-full p-2 text-white font-connection border-2 border-darkgrey bg-offblack'>
+            {width <= breakpoints.md && (
+                <div className='flex flex-row justify-end items-center pt-2 pb-4 px-2'>
+                    <button onClick={onClose}>
+                        <svg width='24px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M6 4v16H4V4h2zm14 7v2h-8v2h-2v-2H8v-2h2V9h2v2h8zm-8-2V7h2v2h-2zm0 6h2v2h-2v-2z" fill="currentColor"/> </svg>
+                    </button>
+                </div>
+            )}
             <div className='flex justify-between items-center p-2 border-b-2 border-darkgrey'>
                 <div className='text-md'>TOTAL COST: {(Math.round(Utils.formatEther(BigInt(totalPrice))*100)/100).toString()} ETH</div>
                 <button 

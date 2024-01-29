@@ -43,11 +43,12 @@ const CanvasArtists = ({ pixels }) => {
     return (
         <div className="container">
                 <div className="fixed bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent z-20"></div>
-                <div className="flex flex-row justify-center items-center text-center font-connection text-offblack text-xs p-2 border-t-2 border-b-2 border-offblack ">
-                    this artwork is being created by all the below artists who together will sign the canvas as {oneArtist}
+                <div className="flex flex-col justify-center w-full items-center text-center font-connection text-offblack text-xs p-2 border-t-2 border-b-2 border-offblack ">
+                    <p>this artwork is being created by all the below artists who together will sign the canvas as</p>
+                    <p>{oneArtist}</p>
                 </div>
 
-                <div className="text-offblack text-center font-connection text-xs grid grid-cols-8 gap-1 p-1 mb-24">
+                <div className=" text-offblack text-center font-connection text-xs grid md:grid-cols-8 grid-cols-4 gap-1 p-1 md:mb-24 mb-12">
                     {pixels.map((pixel, i)  => (
                     <div key={i} className="p-1">
                         {/* {ownerNames[pixel.owner] || 'Loading...'} */}

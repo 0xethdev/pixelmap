@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Utils } from 'alchemy-sdk'
 import Art from './Art';
 import DemoCanvas from './DemoCanvas.jsx';
 import AnimationGrid from './AnimationGrid';
@@ -8,8 +8,113 @@ import PixelContext from './PixelContext.jsx';
 import useFetchSinglePixelData from '../hooks/useFetchSinglePixelData.jsx';
 import PixelPortfolio from './PixelPortfolio.jsx';
 import CanvasArtists from './CanvasArtists.jsx';
+import { createShape } from '../assets/gridShapes';
+import { useAccount } from 'wagmi'
+import { motion, AnimatePresence } from 'framer-motion';
+import MobilePortfolio from './MobilePortfolio.jsx';
+
+const truncateAddress = (address) => {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+};
+
+function useWindowSize() {
+    const [windowSize, setWindowSize] = useState({
+      width: undefined,
+      height: undefined,
+    });
+  
+    useEffect(() => {
+      function handleResize() {
+        setWindowSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      }
+  
+      window.addEventListener('resize', handleResize);
+      
+      // Call handleResize immediately to set the initial size
+      handleResize();
+  
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
+  
+    return windowSize;
+}
+
+const MobileArtGrid = ({grid }) => {
+    const { address, isConnected } = useAccount();
+    const squareSize = 7; // Size of each square
+    const gap = 1; // Gap between squares
+
+    return (
+        <svg width='100%' className="canvas-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520">
+                {grid.map((pixel, i) => {
+                    const x = (i % 64) * (squareSize + gap)+4; 
+                    const y = Math.floor(i / 64) * (squareSize + gap)+4;
+                    const isOwnedByUser = pixel.owner === address;
+                    //const isDimmed = isConnected && filterActive && !isOwnedByUser;
+                    
+                return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, null, null, null, null, false);
+            })}
+        </svg>
+    )
+
+}
+
+const MobileInfoCard = ({ pixelInfo }) => {
+    const formatDate = (timestamp) => {
+        const date = new Date(Number(timestamp) * 1000);
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const day = ("0" + date.getDate()).slice(-2);
+        const month = months[date.getMonth()];
+        const year = date.getFullYear().toString().slice(-2);
+        
+        if(day == '01' && month == 'Jan' && year == '70'){
+            return 'N/A'
+        }else{
+            return `${day} ${month} '${year}`;
+        }
+    }
+
+    const renderShape = (shapeID, color) => {
+        // Set the size of the shape to be rendered in the hover card
+        const size = 20; 
+        const x = 0;
+        const y = 0;
+
+        return (
+            <svg width={size} height={size} className="shape-preview">
+                {createShape(null, shapeID, size, size, x, y, color)}
+            </svg>
+        );
+    };
+    
+    return (    
+        <div className='w-[80%] justify-between my-4 px-4 bg-black border-2 border-darkgrey font-connection'>
+                <div className='flex flex-col justify-between h-full'>
+                    <div className='flex flex-row py-2 border-b-2 border-darkgrey'>
+                        <div className='flex justify-end flex-col w-1/2'>
+                            <p className='text-lg text-white'>{pixelInfo? pixelInfo.x : 0} <span className='text-darkgrey text-lg'>x</span> {pixelInfo? pixelInfo.y : 0}</p>
+                        </div>
+                        <div className='flex flex-col w-1/2 justify-center items-end'>
+                            {renderShape(pixelInfo? Number(pixelInfo.shapeID) : 0, pixelInfo? pixelInfo.color : "#FFFFFF")}
+                        </div>
+                    </div>
+                    <div className='flex flex-row py-1 items-center'>
+                        <p className="text-sm text-white"><span className='text-darkgrey text-sm'>owned by</span> {pixelInfo?truncateAddress(pixelInfo.owner) : ''}</p>
+                    </div>
+                    <div className='flex flex-row justify-between py-1 items-center'>
+                        <p className='text-sm text-white'><span className='text-darkgrey text-sm'>price:</span> {pixelInfo? Math.round(Utils.formatEther(pixelInfo.price)*100)/100 : 0}</p>
+                        <p className='text-sm text-white'><span className='text-darkgrey text-sm'>royalties last paid:</span> {pixelInfo? formatDate(pixelInfo.royaltyLastPaid) : 'NA'}</p>
+                    </div>
+                </div>
+        </div>
+    );
+};
 
 const Canvas = ({ setInitialLoading }) => {
+    const { isConnected, address } = useAccount();
     const [filterActive, setFilterActive] = useState(false);
     const [setPixelData, toggleSetPixelData] = useState(false);
     const [tempPixelData, setTempPixelData] = useState([]);
@@ -18,7 +123,89 @@ const Canvas = ({ setInitialLoading }) => {
     const [demoCanvas, setDemoCanvas] = useState(false);
     const [demoGridData, setDemoGridData] = useState([]);
     useFetchSinglePixelData();
+    const { width } = useWindowSize();
+    const [searchInputX, setSearchInputX] = useState('');
+    const [searchInputY, setSearchInputY] = useState('');
+    const [mobileHighlightPixel,setMobileHighlightPixel] = useState({x:0,y:0});
+    const [currentPixel, setCurrentPixel] = useState();
+    const [toggleMobileSideBar, setToggleMobileSideBar] = useState(false);
+    const [toggleMobilePortfolio, setToggleMobilePortfolio] = useState(false);
+    
+    const handleCloseMobileSideBar = () => {
+        setToggleMobileSideBar(false);
+    };
+    const handleCloseMobilePortfolio = () => {
+        setToggleMobilePortfolio(false);
+    };
 
+    const handlePixelSelectionLeft = () => {
+        const currentX = mobileHighlightPixel.x;
+        const currentY = mobileHighlightPixel.y;
+        if(currentX == 0){
+            if(currentY == 0){
+                setMobileHighlightPixel({x:63,y:63});
+            }else{
+                setMobileHighlightPixel({x:63,y:currentY-1});
+            }
+        }else{
+            setMobileHighlightPixel({x:currentX-1,y:currentY});
+        }
+    }
+    const handlePixelSelectionRight = () => {
+        const currentX = mobileHighlightPixel.x;
+        const currentY = mobileHighlightPixel.y;
+        if(currentX == 63){
+            if(currentY == 63){
+                setMobileHighlightPixel({x:0,y:0});
+            }else{
+                setMobileHighlightPixel({x:0,y:currentY+1});
+            }
+        }else{
+            setMobileHighlightPixel({x:currentX+1,y:currentY});
+        }
+    }
+
+    const handleInputX = (e) => {
+        let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
+        setSearchInputX(newValue);
+    }
+    const handleInputY = (e) => {
+        let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
+        setSearchInputY(newValue);
+    }
+    const handleSerachClick = () => {
+        const foundPixel = pixels.find(pixel => {
+            const pixelX = pixel.x;
+            const pixelY = pixel.y;
+            return pixelX === searchInputX && pixelY === searchInputY;
+        });
+        if (foundPixel) {
+            setMobileHighlightPixel({x:foundPixel.x,y:foundPixel.y});
+            setCurrentPixel(foundPixel)
+            setSearchInputX('');
+            setSearchInputY('');
+        }
+    }
+
+    useEffect(() => {
+        if(!currentPixel){
+            const foundPixel = pixels.find(pixel => pixel.x === 0 && pixel.y === 0);
+            if(foundPixel){
+                setCurrentPixel(foundPixel);
+            }
+        }
+    },[pixels]);
+    useEffect(() => {
+        const foundPixel = pixels.find(pixel => pixel.x === mobileHighlightPixel.x && pixel.y === mobileHighlightPixel.y);
+        setCurrentPixel(foundPixel);
+
+    },[mobileHighlightPixel]);
+    
+    const breakpoints = {
+        sm: 640,
+        md: 768,
+        lg: 1024,
+    };
     
 
     useEffect(() => {
@@ -65,6 +252,7 @@ const Canvas = ({ setInitialLoading }) => {
         );
     }
 
+    if(width > breakpoints.md){
     return (
         <div className='flex flex-col'>
             <div className='flex justify-start items-start text-white text-xs font-connection py-1 px-10'>
@@ -92,7 +280,7 @@ const Canvas = ({ setInitialLoading }) => {
 
                 <div className='flex gap-10 pb-10'>            
                     <div className='flex flex-col w-1/5 ml-10 mt-10'>
-                        <SideBar selectedPixels={selectedPixels} removePixel={removePixel} setSelectedPixels={setSelectedPixels}/>
+                        <SideBar isOpen={toggleMobileSideBar} onClose={handleCloseMobileSideBar} selectedPixels={selectedPixels} removePixel={removePixel} setSelectedPixels={setSelectedPixels}/>
                     </div>
                     <div className='flex flex-col w-3/5'>
                         <div className="flex justify-center items-top ">
@@ -130,6 +318,113 @@ const Canvas = ({ setInitialLoading }) => {
             </div>
         </div>        
     );
+    }
+
+    
+
+    if(width <= breakpoints.md){
+        return(
+            <div className='flex flex-col mx-4 mt-4 font-connection text-white'>
+                <div className='flex flex-row justify-between mx-2 gap-2'>
+                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-3 px-2 w-32 text-center'
+                        onClick={() => setToggleMobileSideBar(true)}
+                        disabled={selectedPixels.length ===0}
+                    >
+                        Selection {selectedPixels.length > 0 ? `(${selectedPixels.length}/32)` : ''}
+                    </button>
+                    
+                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-3 px-2 w-32 text-center'
+                        onClick={() => setToggleMobilePortfolio(true)}
+                    >
+                        Portfolio
+                    </button>
+                </div>
+                    <div className='flex flex-row justify-between items-center mx-2 text-lightgrey font-connection text-xs border-2 border-darkgrey my-2 py-2 px-2'>
+                        <span className='w-2/5' >pixel search</span>
+                        <div className='flex flex-row justify-center items-center'>
+                            <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputX} onChange={(e) => handleInputX(e)} min="0" max="63" placeholder="X: 0-63"/>
+                            <span className='text-darkgrey text-md'> x </span>
+                            <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputY} onChange={(e) => handleInputY(e)} min="0" max="63" placeholder="Y: 0-63"/>
+                        </div>
+                        <button
+                            className='w-2/5'
+                            onClick={() => handleSerachClick()}
+                            
+                        >
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M6 2h8v2H6V2zM4 6V4h2v2H4zm0 8H2V6h2v8zm2 2H4v-2h2v2zm8 0v2H6v-2h8zm2-2h-2v2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm0-8h2v8h-2V6zm0 0V4h-2v2h2z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className='flex items-center justify-center mt-4'>
+                        <MobileArtGrid grid={pixels} />
+                    </div>
+                    <div className='flex flex-row justify-between'>
+                        <button className='w-[24px]' onClick={() => handlePixelSelectionLeft()}>
+                            <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M16 5v2h-2V5h2zm-4 4V7h2v2h-2zm-2 2V9h2v2h-2zm0 2H8v-2h2v2zm2 2v-2h-2v2h2zm0 0h2v2h-2v-2zm4 4v-2h-2v2h2z" fill='#EBEBEB'/> </svg>
+                        </button>
+                        <MobileInfoCard pixelInfo={currentPixel} />
+                        <button className='w-[24px]' onClick={() => handlePixelSelectionRight()}>
+                            <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M8 5v2h2V5H8zm4 4V7h-2v2h2zm2 2V9h-2v2h2zm0 2h2v-2h-2v2zm-2 2v-2h2v2h-2zm0 0h-2v2h2v-2zm-4 4v-2h2v2H8z" fill='#EBEBEB'/> </svg>
+                        </button>    
+                    </div>
+                    <div className='flex flex-row items-center justify-center mx-4 mb-12'>
+                        <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-3 px-2 w-[80%] flex items-center justify-between'
+                            onClick={() => handlePixelClick(currentPixel)}
+                        >
+                            <span>
+                                Add Pixel to Selection
+                            </span>
+                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M4 11v2h12v2h2v-2h2v-2h-2V9h-2v2H4zm10-4h2v2h-2V7zm0 0h-2V5h2v2zm0 10h2v-2h-2v2zm0 0h-2v2h2v-2z" fill="currentColor"/>
+                            </svg>    
+                        </button>
+                    </div>
+                    {selectedPixels.length >0 && (
+                    <>
+                        <AnimatePresence>
+                            {toggleMobileSideBar && (
+                            <motion.div
+                                initial={{ x: '-100%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: '-100%' }}
+                                transition={{ type: 'spring', duration: 0.3 }}
+                                className="fixed top-0 left-0 w-4/5 h-full bg-black z-50"
+                            >
+                                <div className="h-full bg-offblack">
+                                    <SideBar isOpen={toggleMobileSideBar} onClose={handleCloseMobileSideBar} selectedPixels={selectedPixels} removePixel={removePixel} setSelectedPixels={setSelectedPixels}/>
+                                </div>
+                            </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </>
+                    )}
+                    {isConnected && (
+                    <>
+                        <AnimatePresence>
+                            {toggleMobilePortfolio && (
+                            <motion.div
+                                initial={{ x: '+200%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: '+200%' }}
+                                transition={{ type: 'spring', duration: 0.3 }}
+                                className="fixed top-0 left-0 w-full h-full bg-black z-50"
+                            >
+                                <div className="h-full bg-black">
+                                    <MobilePortfolio isOpen={toggleMobilePortfolio} onClose={handleCloseMobilePortfolio} />
+                                </div>
+                            </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </>
+                    )}
+                    
+                    <div className=''>
+                        <CanvasArtists pixels={pixels}/>
+                    </div>
+            </div>
+        );
+    }
 };
 
 export default Canvas;

@@ -58,7 +58,7 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
             <div className="container mx-auto px-4">
             { !isInitialLoading ? (
                 <div>
-                <div className="flex flex-row justify-between items-center md:px-8 pt-4">
+                <div className="flex flex-row justify-between items-center md:px-8 pb-2 pt-4">
                 {width < breakpoints.md ? (
                     <>
                         < ConnectButton />
