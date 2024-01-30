@@ -54,7 +54,7 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
 
 
     return (
-        <div className="sticky top-0 bg-black z-30" >
+        <div className="md:sticky top-0 bg-black z-30" >
             <div className="container mx-auto px-4">
             { !isInitialLoading ? (
                 <div>

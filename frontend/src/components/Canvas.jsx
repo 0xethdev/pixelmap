@@ -326,21 +326,28 @@ const Canvas = ({ setInitialLoading }) => {
         return(
             <div className='flex flex-col mx-4 mt-4 font-connection text-white'>
                 <div className='flex flex-row justify-between mx-2 gap-2'>
-                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-3 px-2 w-32 text-center'
+                    <button className='text-xs text-black bg-lightgrey mr-auto border-2 border-darkgrey py-2 px-2 w-28 text-center'
                         onClick={() => setToggleMobileSideBar(true)}
                         disabled={selectedPixels.length ===0}
+                        hidden={selectedPixels.length ===0}
                     >
                         Selection {selectedPixels.length > 0 ? `(${selectedPixels.length}/32)` : ''}
                     </button>
                     
-                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-3 px-2 w-32 text-center'
+                    <button className='text-xs text-black bg-lightgrey ml-auto border-2 border-darkgrey py-2 px-2 w-28 text-center'
                         onClick={() => setToggleMobilePortfolio(true)}
+                        disabled={!isConnected}
+                        hidden={!isConnected}
                     >
                         Portfolio
                     </button>
                 </div>
-                    <div className='flex flex-row justify-between items-center mx-2 text-lightgrey font-connection text-xs border-2 border-darkgrey my-2 py-2 px-2'>
-                        <span className='w-2/5' >pixel search</span>
+                    
+                    <div className='flex items-center justify-center mt-4'>
+                        <MobileArtGrid grid={pixels} />
+                    </div>
+                    <div className='flex flex-row justify-between items-center mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey my-2 py-2 px-2'>
+                        <span className='w-3/5' >pixel search</span>
                         <div className='flex flex-row justify-center items-center'>
                             <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputX} onChange={(e) => handleInputX(e)} min="0" max="63" placeholder="X: 0-63"/>
                             <span className='text-darkgrey text-md'> x </span>
@@ -355,9 +362,6 @@ const Canvas = ({ setInitialLoading }) => {
                                 <path d="M6 2h8v2H6V2zM4 6V4h2v2H4zm0 8H2V6h2v8zm2 2H4v-2h2v2zm8 0v2H6v-2h8zm2-2h-2v2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm0-8h2v8h-2V6zm0 0V4h-2v2h2z" fill="currentColor"/>
                             </svg>
                         </button>
-                    </div>
-                    <div className='flex items-center justify-center mt-4'>
-                        <MobileArtGrid grid={pixels} />
                     </div>
                     <div className='flex flex-row justify-between'>
                         <button className='w-[24px]' onClick={() => handlePixelSelectionLeft()}>
@@ -388,7 +392,7 @@ const Canvas = ({ setInitialLoading }) => {
                                 initial={{ x: '-100%' }}
                                 animate={{ x: 0 }}
                                 exit={{ x: '-100%' }}
-                                transition={{ type: 'spring', duration: 0.3 }}
+                                transition={{ type: 'Inertia', duration: 0.2 }}
                                 className="fixed top-0 left-0 w-4/5 h-full bg-black z-50"
                             >
                                 <div className="h-full bg-offblack">
@@ -404,11 +408,11 @@ const Canvas = ({ setInitialLoading }) => {
                         <AnimatePresence>
                             {toggleMobilePortfolio && (
                             <motion.div
-                                initial={{ x: '+200%' }}
+                                initial={{ x: '+100%' }}
                                 animate={{ x: 0 }}
-                                exit={{ x: '+200%' }}
-                                transition={{ type: 'spring', duration: 0.3 }}
-                                className="fixed top-0 left-0 w-full h-full bg-black z-50"
+                                exit={{ x: '+100%' }}
+                                transition={{ type: 'Inertia', duration: 0.2 }}
+                                className="fixed top-0 left-0 w-full h-full bg-black z-50 overflow-y-auto"
                             >
                                 <div className="h-full bg-black">
                                     <MobilePortfolio isOpen={toggleMobilePortfolio} onClose={handleCloseMobilePortfolio} />

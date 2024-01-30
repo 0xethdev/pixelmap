@@ -1,6 +1,6 @@
 const Pixelmap = require('../frontend/src/artifacts/contracts/Pixelmap.sol/Pixelmap.json');
 
-marketPlaceAddr = "0x564Db7a11653228164FD03BcA60465270E67b3d7";
+marketPlaceAddr = "0x65a32f48F4b15555634e00FeD6378586c2dc5195";
 
 async function main() {
     let x1 = 63;
@@ -28,7 +28,7 @@ async function main() {
     inputArray.push(input3);
     
     const accounts = await ethers.getSigners();
-    const mainAcct = accounts[16];
+    const mainAcct = accounts[0];
     const pixelmap = new ethers.Contract(marketPlaceAddr, Pixelmap.abi, mainAcct);
     
 
@@ -46,4 +46,4 @@ main()
         process.exit(1);
     });
 
-// npx hardhat run --network localhost scripts/settingTestColors.js
+// npx hardhat run --network sepolia scripts/settingTestColors.js

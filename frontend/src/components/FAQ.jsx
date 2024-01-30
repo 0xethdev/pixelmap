@@ -58,10 +58,6 @@ const faqData = [
         question: "WHAT DOES THE FUTURE HOLD FOR _MOSAIX?",
         answer: "The future of _mosaix is shaped by its community. We encourage pixel owners to make the most of their digital canvas and decide wisely on which NFTs to mint. The ultimate goal for this project to to assign the manager role of the pixel map contract to a new multi-sig wallet controlled by the collective pixel owners."
     },
-    {
-        question: "WHO CREATED _MOSAIX?",
-        answer: "_mosaix is a passion project created by @0x7967. Please reach out on twitter/X for any questions."
-    },
   ];
   
 

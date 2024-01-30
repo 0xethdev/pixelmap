@@ -21,9 +21,10 @@ function App() {
   const config = createConfig(
     getDefaultConfig({
       // Required API Keys
-      alchemyId: import.meta.env.VITE_ETH_MAINNET,
+      //alchemyId: import.meta.env.VITE_ETH_MAINNET,
+      alchemyId: import.meta.env.VITE_SEPOLIA_TESTNET,
       walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
-      chains: [localhost],
+      chains: [sepolia],
       
       // Required
       appName: "Pixel Map",

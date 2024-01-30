@@ -165,12 +165,12 @@ const MobilePortfolio = ({isOpen, onClose }) => {
     const shapes = [0,1,2,3,4,5,6,7,8,9];
     
     const renderShape = (shapeID, color) => {
-        const size = 12;
+        const size = 20;
         const x = 0;
         const y = 0;
 
         return (
-            <svg width={size} height={size} viewBox="0 0 14 14">
+            <svg width={size} height={size} viewBox="0 0 20 20">
                 {createShape(null, shapeID, size, size, x, y, color)}
             </svg>
         );
@@ -406,22 +406,26 @@ const MobilePortfolio = ({isOpen, onClose }) => {
 
 
     if (userPixels.length ==0) return (
-        <div className='flex flex-col w-[80%] p-2 text-white font-connection border-2 border-darkgrey bg-offblack'>
-            <div className='flex justify-between items-center p-2 border-b-2 border-darkgrey'>
-                <div className='text-sm'>You don't own any pixels yet. Purchase some pixels by selecting your favorite ones from the grid.</div>
+        <div className='flex flex-col mx-4 mt-4 mb-10 font-connection text-white'>
+            <div className='flex flex-row justify-between items-center mx-2 gap-2'>
+                Your Pixel Portfolio
+                <button onClick={onClose} className="text-white text-2xl border-2">
+                    <svg width='24px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/> </svg>
+                </button>
             </div>
-            
+            <div className='flex flex-col items-center justify-center h-full mt-20'>
+                You don't own any pixels yet. Purchase some pixels by selecting your favorite ones from the grid.
+            </div>
         </div>
     )
     return (
-        <div className='flex flex-col mx-4 mt-4 font-connection text-white'>
+        <div className='flex flex-col mx-4 mt-4 mb-10 font-connection text-white'>
             {!setPixelData &&(
             <>
-            <div className='flex flex-row justify-between mx-2 gap-2'>
-                <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey py-3 px-2 w-32 text-center'
-                    onClick={onClose}
-                >
-                    Close Portfolio
+            <div className='flex flex-row justify-between items-center mx-2 gap-2'>
+                Your Pixel Portfolio
+                <button onClick={onClose} className="text-white text-2xl border-2">
+                    <svg width='24px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/> </svg>
                 </button>
             </div>
                 <div className='flex items-center justify-center mt-4'>
@@ -453,7 +457,7 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                         </div>
                         }
                         
-                        <div className='flex flex-row justify-between items-center'>
+                        <div className='flex flex-row justify-between items-center mb-10'>
                             <button className='flex items-center justify-between w-full text-xs text-black bg-lightgrey border-2 border-darkgrey  hover:bg-black hover:text-white hover:border-lightgrey py-2 px-2' onClick={() => handlePayRoyalties()}
                             >
                                 <span>Pay Royalties</span>
@@ -624,7 +628,7 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                 )}
                 {setPixelData && (
                 <>
-                    <div className='flex flex-col justify-between pt-2 border-t-2 border-darkgrey'>
+                    <div className='flex flex-col justify-between pt-2 mb-4 border-t-2 border-darkgrey'>
                             <div className='flex flex-row justify-between gap-2 items-center'>
                                 <button className='text-xs bg-black text-lightgrey border-darkgrey hover:border-black border-2 py-2 px-2 w-full flex items-center justify-between' onClick={() => handlePixelModification()}
                                 >
@@ -653,7 +657,7 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                         </div>
 
             
-                <div className='flex items-center justify-center mt-4'>
+                <div className='flex items-center justify-center mt-2'>
                     <MobileArtGrid grid={tempPixelData} dimm={false} />
                 </div>
                 <div className='flex flex-row justify-between items-center p-2 '>
@@ -661,20 +665,22 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                     <div className='text-md'>{includeInUpdate.reduce((count, value) => {return value ? count + 1 : count;}, 0)} / {userPixels.length}</div>
                 </div>
                 <div className='flex flex-row justify-between gap-2 py-2 items-center border-b-2 border-darkgrey'>
-                    <button className='text-xs bg-black text-lightgrey border-darkgrey hover:border-black border-2 py-2 px-2 w-full flex items-center justify-between'
+                    <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey hover:border-lightgrey py-2 px-2 w-full flex items-center justify-between'
                         onClick={() => handlePixelSelectionLeft_Color()}
                     >
+                        <svg className="mr-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M20 11v2H8v2H6v-2H4v-2h2V9h2v2h12zM10 7H8v2h2V7zm0 0h2V5h-2v2zm0 10H8v-2h2v2zm0 0h2v2h-2v-2z" fill="currentColor"/> </svg>
                         Prev Pixel
                     </button>
                     <button className='text-xs text-black bg-lightgrey border-2 border-darkgrey hover:border-lightgrey py-2 px-2 w-full flex items-center justify-between' 
                         onClick={() => handlePixelSelectionRight_Color()}
                     >
-                        Next Pixel
+                        <span>Next Pixel</span>
+                        <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M4 11v2h12v2h2v-2h2v-2h-2V9h-2v2H4zm10-4h2v2h-2V7zm0 0h-2V5h2v2zm0 10h2v-2h-2v2zm0 0h-2v2h2v-2z" fill="currentColor"/> </svg>
                     </button>
                 </div>
                 <div className='hide-scrollbar h-full overflow-y-auto'>
-                    <div className='flex justify-between items-center p-2 mb-2 border-b-2 border-darkgrey'>
-                        <div className='flex flex-1 justify-start items-center gap-1'>
+                    <div className='flex justify-between items-center p-3 mb-2 border-b-2 border-darkgrey'>
+                        <div className='flex flex-1 justify-start items-center gap-3'>
                             <button className='w-[24px]' onClick={() => handleIncludeInUpdate(pixelColorIndex)}>
                             {includeInUpdate[pixelColorIndex] ? 
                                 <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M5 3H3v18h18V3H5zm0 2h14v14H5V5zm4 7H7v2h2v2h2v-2h2v-2h2v-2h2V8h-2v2h-2v2h-2v2H9v-2z" fill='#EBEBEB'/> </svg>    
@@ -682,14 +688,14 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                                 <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" fill='#EBEBEB'/> </svg>
                             }
                             </button>
-                            <div className='text-md'>{userPixels[pixelColorIndex].x} x {userPixels[pixelColorIndex].y}</div>
+                            <div className='text-lg'>{userPixels[pixelColorIndex].x} x {userPixels[pixelColorIndex].y}</div>
                         </div>
                         <div className='flex flex-1 justify-center items-center gap-3'>
-                            <button className='w-[24px]' onClick={() => handleLeftArrowShape(pixelColorIndex)}>
+                            <button className='w-[36px]' onClick={() => handleLeftArrowShape(pixelColorIndex)}>
                                 <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M16 5v2h-2V5h2zm-4 4V7h2v2h-2zm-2 2V9h2v2h-2zm0 2H8v-2h2v2zm2 2v-2h-2v2h2zm0 0h2v2h-2v-2zm4 4v-2h-2v2h2z" fill='#EBEBEB'/> </svg>
                             </button>
                             {renderShape(shapes[selectedShape[pixelColorIndex]], selectedColor[pixelColorIndex])}
-                            <button className='w-[24px]' onClick={() => handleRightArrowShape(pixelColorIndex)}>
+                            <button className='w-[36px]' onClick={() => handleRightArrowShape(pixelColorIndex)}>
                                 <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M8 5v2h2V5H8zm4 4V7h-2v2h2zm2 2V9h-2v2h2zm0 2h2v-2h-2v2zm-2 2v-2h2v2h-2zm0 0h-2v2h2v-2zm-4 4v-2h2v2H8z" fill='#EBEBEB'/> </svg>
                             </button>
                         </div>

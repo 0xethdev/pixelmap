@@ -1,2 +1,2 @@
-const contractAddr = '0x564Db7a11653228164FD03BcA60465270E67b3d7'
+const contractAddr = '0x65a32f48F4b15555634e00FeD6378586c2dc5195'
 export default contractAddr

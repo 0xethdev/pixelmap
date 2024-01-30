@@ -4,7 +4,9 @@ async function main() {
     const pixelmap = await ethers.deployContract("contracts/Pixelmap.sol:Pixelmap");
     console.log("pixelmap address:", await pixelmap.getAddress());
 
-    const nftContract = await ethers.deployContract("contracts/CanvasCollection.sol:CanvasCollection",[pixelmap.getAddress()]);
+    const nftContract = await ethers.deployContract("contracts/CanvasCollection.sol:CanvasCollection",[pixelmap.getAddress()],{
+      txOverrides: { gasLimit: 1000000n },
+    });
     console.log("nftContract address:", await nftContract.getAddress());
 
     await pixelmap.setNFTContract(nftContract.getAddress());
@@ -19,4 +21,4 @@ async function main() {
       process.exit(1);
     });
   
-  // npx hardhat run --network localhost scripts/deploy.js
+  // npx hardhat run --network sepolia scripts/deploy.js
