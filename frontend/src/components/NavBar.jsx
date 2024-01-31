@@ -123,16 +123,7 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
             ):
             (
                 <div>
-                    <div className="flex flex-row justify-between items-center px-8 pt-4">
-                        <motion.h1 
-                            className="text-4xl font-connection text-white w-2/3"
-                            initial={{ color: '#0F0F0F' }}
-                            animate={{ color: '#FFFFFF' }}
-                            transition={{ duration: 5, delay: 13, type:"tween", ease:"easeIn"  }} >
-                                _mosaix
-                        </motion.h1>
-                    </div>
-                    <div className="flex flex-row justify-end px-8 pt-1 pb-3" />
+                    
                 </div>
             )}
             </div>

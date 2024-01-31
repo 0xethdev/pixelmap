@@ -11,6 +11,8 @@ export const PixelProvider = ({ children }) => {
     const [pixels, setPixels] = useState(Array(64 * 64).fill({ color: '#ffffff' }));
     const [updatedPixels, setUpdatedPixels] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [progress, setProgress] = useState(0);
+    let progressCounter = 0;
 
     const handlePixelChange = (event) => {
         const uniqueKeys = new Set();
@@ -86,10 +88,13 @@ export const PixelProvider = ({ children }) => {
             const yValues = Array(BATCH_SIZE).fill(y);
 
             for (let x = 0; x < 64; x += BATCH_SIZE) {
+                console.log('progress %',progress*100)
                 const xValues = Array.from({ length: Math.min(BATCH_SIZE, 64 - x) }, (_, i) => x + i);
                 const pixelBatch = await fetchBatch(xValues, yValues);
                 //console.log(pixelBatch);
                 allPixels.push(...pixelBatch);
+                progressCounter += pixelBatch.length;
+                setProgress(progressCounter/4096 *100);
             }
         }
 
@@ -117,6 +122,8 @@ export const PixelProvider = ({ children }) => {
         if (cachedPixels) {
             setPixels(JSON.parse(cachedPixels));  // Use cached data
             setLoading(false);
+            progressCounter = 0;
+            setProgress(0);
         } else {
             fetchPixelData();  // Fetch data if not in cache
         }
@@ -127,7 +134,8 @@ export const PixelProvider = ({ children }) => {
         setPixels,
         updatedPixels,
         setUpdatedPixels,
-        loading
+        loading,
+        progress
     };
 
     return <PixelContext.Provider value={value}>{children}</PixelContext.Provider>;

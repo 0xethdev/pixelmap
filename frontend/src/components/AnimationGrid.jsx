@@ -1,85 +1,36 @@
 import { useState, useEffect } from 'react';
-import { useSpring, animated } from 'react-spring';
-import pixelMap from '../hooks/animationSequence';
+import ShapeLoader from '../assets/ShapeLoader';
 
-  const AnimationGrid = () => {
-    const squareSize = 8; // Size of each square
-    const gap = 1; // Gap between squares
-    const gridSize = 64; // 100x100 grid
+  const AnimationGrid = ({width, height}) => {
+    const colorPalette = ['#E84AA9', '#F2399D', '#DB2F96', '#E73E85', '#FF7F8E', '#FA5B67', '#E8424E', '#D5332F', '#C23532', '#F2281C', '#D41515', '#9D262F', '#DE3237', '#DA3321', '#EA3A2D', '#EB4429', '#EC7368', '#FF8079', '#FF9193', '#EA5B33', '#D05C35', '#ED7C30', '#EF9933', '#EF8C37', '#F18930', '#F09837', '#F9A45C', '#F2A43A', '#F2A840', '#F2A93C', '#FFB340', '#F2B341', '#FAD064', '#F7CA57', '#F6CB45', '#FFAB00', '#F4C44A', '#FCDE5B', '#F9DA4D', '#F9DA4A', '#FAE272', '#F9DB49', '#FAE663', '#FBEA5B', '#A7CA45', '#B5F13B', '#94E337', '#63C23C', '#86E48E', '#77E39F', '#5FCD8C', '#83F1AE', '#9DEFBF', '#2E9D9A', '#3EB8A1', '#5FC9BF', '#77D3DE', '#6AD1DE', '#5ABAD3', '#4291A8', '#33758D', '#45B2D3', '#81D1EC', '#A7DDF9', '#9AD9FB', '#A4C8EE', '#60B1F4', '#2480BD', '#4576D0', '#3263D0', '#2E4985', '#25438C', '#525EAA', '#3D43B3', '#322F92', '#4A2387', '#371471', '#3B088C', '#6C31D7', '#9741DA'];
+    const [currentColors, setCurrentColors] = useState([colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0],colorPalette[0]]);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+          const updatedColors = currentColors.map(() => {
+              return colorPalette[Math.floor(Math.random() * colorPalette.length)];
+          });
+          setCurrentColors(updatedColors);
+      }, 500);
+  
+      return () => clearInterval(interval);
+  }, [currentColors]);
   
     return (
-      <svg width="600" height="600">
-        {Array.from({ length: gridSize * gridSize }, (_, i) => i).map((index) => {
-          const x = (index % gridSize) * (squareSize + gap) + 12;
-          const y = Math.floor(index / gridSize) * (squareSize + gap) + 12;
-          const posX = (index % gridSize) + 1;
-          const posY = Math.floor(index / gridSize) + 1;
-          const key = `${posX}_${posY}`;
-
-          return (
-            <AnimatedPixel
-              key={index}
-              x={x}
-              y={y}
-              width={squareSize}
-              height={squareSize}
-              animationSequence={pixelMap[key] || []}  // Use the sequence from pixelMap if defined
-            />
-          );
-        })}
-      </svg>
+      <ShapeLoader width={width} height={height}
+        fillColor1={currentColors[0]} 
+        fillColor2={currentColors[1]} 
+        fillColor3={currentColors[2]} 
+        fillColor4={currentColors[3]} 
+        fillColor5={currentColors[4]} 
+        fillColor6={currentColors[5]} 
+        fillColor7={currentColors[6]} 
+        fillColor8={currentColors[7]} 
+        fillColor9={currentColors[8]} 
+        fillColor10={currentColors[9]} 
+      />
     );
   };
-  
-    // Individual animated pixel component using react-spring
-    const AnimatedPixel = ({ x, y, width, height, animationSequence }) => {
-        // Initial color
-        const initialColor = '#0F0F0F';
-      
-        // Use react-spring to animate the color transitions
-        const [{ color }, api] = useSpring(() => ({ color: initialColor }));
-    
-        useEffect(() => {
-            let cancel = false;
-    
-            // Define an async function to handle the animation sequence
-            const runAnimationSequence = async () => {
-                // Previous time to calculate the delay between steps
-                let previousTime = 0;
-    
-                for (const { time, color: newColor } of animationSequence) {
-                    // Calculate the delay for this step
-                    const delay = time - previousTime;
-    
-                    // Wait for the delay before applying the new color
-                    await new Promise(resolve => setTimeout(resolve, delay));
-    
-                    // Check if the component is still mounted before updating
-                    if (!cancel) {
-                        api.start({ color: newColor });
-                        previousTime = time;
-                    }
-                }
-            };
-    
-            // Run the animation sequence
-            runAnimationSequence();
-    
-            // Cleanup function to set cancel flag
-            return () => {
-                cancel = true;
-            };
-        }, [animationSequence, api]);
-    
-        return (
-          <animated.rect
-            x={x}
-            y={y}
-            width={width}
-            height={height}
-            fill={color}
-          />
-        );
-    };
+
   
 export default AnimationGrid;

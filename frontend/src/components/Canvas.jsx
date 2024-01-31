@@ -42,6 +42,22 @@ function useWindowSize() {
     return windowSize;
 }
 
+const ProgressBar = ({ progress }) => {
+    const progressBarStyle = {
+        width: `${progress}%`,
+        height: '10px',
+        backgroundColor: '#EBEBEB',
+        transition: 'width 1s ease-in-out',
+    };
+
+    return (
+        <div style={{ width: '100%', backgroundColor: '#3D3D3D' }}>
+            <div style={progressBarStyle}></div>
+        </div>
+    );
+};
+
+
 const MobileArtGrid = ({grid }) => {
     const { address, isConnected } = useAccount();
     const squareSize = 7; // Size of each square
@@ -118,7 +134,7 @@ const Canvas = ({ setInitialLoading }) => {
     const [filterActive, setFilterActive] = useState(false);
     const [setPixelData, toggleSetPixelData] = useState(false);
     const [tempPixelData, setTempPixelData] = useState([]);
-    const { pixels, loading } = useContext(PixelContext);
+    const { pixels, loading, progress } = useContext(PixelContext);
     const [selectedPixels, setSelectedPixels] = useState([]);
     const [demoCanvas, setDemoCanvas] = useState(false);
     const [demoGridData, setDemoGridData] = useState([]);
@@ -246,9 +262,17 @@ const Canvas = ({ setInitialLoading }) => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-top pt-12 pb-10">
-                <AnimationGrid/>
+            <div className='container'>
+                <div className="flex flex-col mx-4 w-100% h-full items-center justify-center items-top pt-12 pb-10">
+                    <AnimationGrid width={width > breakpoints.md? '100%' : '300px'} height={width > breakpoints.md? '100%' : '300px'}/>
+                    <div className='flex flex-row w-full items-center justify-center gap-3'>
+                        <p className='p-3 text-sm md:text-md font-connection text-white'>Loading Canvas... {Math.round(progress*100)/100}%</p>
+                        <ProgressBar progress={progress} />
+                    </div>
+                    
+                </div>
             </div>
+            
         );
     }
 
