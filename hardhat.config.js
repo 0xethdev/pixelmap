@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("hardhat-gas-reporter");
 const dotenv = require('dotenv');
 
 dotenv.config();
