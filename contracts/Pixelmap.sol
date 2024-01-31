@@ -130,7 +130,7 @@ contract Pixelmap is ReentrancyGuard {
         for (uint i=0; i < length; i++){
             (uint _x, uint _y, uint _shape, string memory _color) = abi.decode(_pixels[i], (uint, uint, uint, string));
             if (isOutOfBound(_x,_y)) {
-            revert('pixel is out of bounds');
+                revert('pixel is out of bounds');
             }
             require(_shape < 10, 'shape ID not available');
             require(!window[_x][_y].askedToPayRoyalties, 'owner was asked to first settle royalty payment');

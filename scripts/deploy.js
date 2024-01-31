@@ -21,4 +21,4 @@ async function main() {
       process.exit(1);
     });
   
-  // npx hardhat run --network sepolia scripts/deploy.js
+  // npx hardhat run --network localhost scripts/deploy.js
