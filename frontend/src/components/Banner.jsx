@@ -41,7 +41,12 @@ const Banner = ({ isInitialLoading }) => {
     useEffect(() => {
         const calculateTimeLeft = () => {
             const now = new Date();
-            const endTime = new Date(cycleEndTime*1000);
+            let endTime;
+            if(currentPeriodisArt){
+                endTime = new Date(cycleEndTime*1000 - 24*60*60*1000);
+            }else{
+                endTime = new Date(cycleEndTime*1000);
+            }
             const difference = endTime - now;
 
             let timeLeft = '';

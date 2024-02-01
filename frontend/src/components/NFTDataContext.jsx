@@ -48,7 +48,7 @@ export const NFTDataProvider = ({ children }) => {
     }, []);
 
     return (
-        <NFTDataContext.Provider value={{ nftData }}>
+        <NFTDataContext.Provider value={{ totalSupply, nftData }}>
             {children}
         </NFTDataContext.Provider>
     );

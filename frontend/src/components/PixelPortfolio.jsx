@@ -64,6 +64,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
         updatedTempPixelData[userPixelIndices[colorPickerIndex]].color = newInput;
         setTempPixelData(updatedTempPixelData);
       };
+      
 
     const outstandingRoyalties = (pixel) => {
         const lastPaymentDate = new Date(Number(pixel.royaltyLastPaid)*1000);

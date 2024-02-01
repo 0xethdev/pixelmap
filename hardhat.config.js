@@ -34,7 +34,7 @@ module.exports = {
     frameTest:{
       url: "https://rpc.testnet.frame.xyz/http",
       chainId: 68840142,
-      accounts: [process.env.PRIVATE_KEY], // Replace with your private key
+      accounts: [process.env.PRIVATE_KEY],
     }
   },
   etherscan: {

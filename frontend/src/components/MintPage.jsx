@@ -59,7 +59,7 @@ const MintPage = ({ setInitialLoading }) => {
     const [updateResults, setUpdateResults] = useState(true);
     const { isConnected, address } = useAccount();
     const { pixels, loading } = useContext(PixelContext);
-    const { nftData } = useContext(NFTDataContext);
+    const { totalSupply, nftData } = useContext(NFTDataContext);
     const [userAlreadyVoted, setUserAlreadyVoted] = useState(false);
     const [showGallery, setShowGallery] = useState(false);
     const { currentPeriodisArt, cycleEndTime, currentCycleNr } = useContext(PeriodContext);
@@ -130,7 +130,6 @@ const MintPage = ({ setInitialLoading }) => {
                 functionName: 'getAuctionClaimFlag',
                 args:[galleryID, address]
             });
-            console.log(fetchClaimFlag)
             setClaimFlag(fetchClaimFlag);
 
             const fetchAuction = await readContract({
@@ -160,7 +159,10 @@ const MintPage = ({ setInitialLoading }) => {
             });
             setCurrentOwner(fetchOwner);
         }
-        fetchCurrentOwner();
+        if(totalSupply > 0){
+            fetchCurrentOwner();
+        }
+        
         
         const fetchMintDate = async () => {
             const fetchedMintDate = await readContract({
@@ -172,7 +174,10 @@ const MintPage = ({ setInitialLoading }) => {
             setMintDate(formatDate(fetchedMintDate));
             
         }
-        fetchMintDate();
+        if(totalSupply > 0){
+            fetchMintDate();
+        }
+        
 
         const calculateTimeLeft = (endTimeInput) => {
             const now = new Date();
@@ -386,89 +391,89 @@ const MintPage = ({ setInitialLoading }) => {
                     </button>
 
                 </div>
-
-            {showGallery && nftData && nftData[galleryID] ?
-                <div className='flex flex-col justify-center md:w-[70%] w-full font-connection md:mt-4 mt-1'>
-                    <div className='p-1 flex flex-row items-center w-full mt-10 text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
-                        <div className='flex md:flex-row flex-col justify-between md:items-center items-start my-1 md:mx-4 mx-2 w-full '>
-                            <div className='text-sm text-lightgrey'>{nftData[galleryID].name}</div>
-                            <p>{nftData[galleryID].description}</p>
-                        </div>
-                    </div>
-                    <div className='flex flex-row justify-between items-center md:mt-10 mt-4'>
-                        <button className='w-[24px]'
-                            onClick={() => handleLeftArrowShape()}
-                        >
-                            <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M16 5v2h-2V5h2zm-4 4V7h2v2h-2zm-2 2V9h2v2h-2zm0 2H8v-2h2v2zm2 2v-2h-2v2h2zm0 0h2v2h-2v-2zm4 4v-2h-2v2h2z" fill='#EBEBEB'/> </svg>
-                        </button>
-                        <div className='md:w-[400px] w-[300px] border-2 border-darkgrey'>
-                            <img src={nftData[galleryID].image}/>
-                        </div>
-                        <button className='w-[24px]'
-                            onClick={() => handleRightArrowShape()}
-                        >
-                            <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M8 5v2h2V5H8zm4 4V7h-2v2h2zm2 2V9h-2v2h2zm0 2h2v-2h-2v2zm-2 2v-2h2v2h-2zm0 0h-2v2h2v-2zm-4 4v-2h2v2H8z" fill='#EBEBEB'/> </svg>
-                        </button>
-                    </div>
-                    <div className='p-1 flex flex-row items-center w-full md:mt-10 mt-4 text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
-                        <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
-                            <div>Artist Signature</div>
-                            <div className='md:text-sm text-lightgrey'>{truncateAddress(nftData[galleryID].artist)}</div>
-                        </div>
-                        <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
-                            <div>Mint Date</div>
-                            <div className='md:text-sm text-lightgrey'>{mintDate}</div>
-                        </div>
-                        <div className='flex flex-col items-center w-1/3'>
-                            <div>Current Owner</div>
-                            <div className='md:text-sm text-lightgrey'>{currentOwner ==  address? 'you' : truncateAddress(currentOwner)}</div>
-                        </div>
-                    </div>
-                    {showAuction && (
-                        <div className='p-1 flex md:flex-row flex-col items-center w-full md:mt-4 mt-16 text-offblack font-connection md:text-xs text-sm border-2 border-lightgrey bg-white'>                          
-                            <div className='flex md:flex-col justify-between flex-row items-center md:w-1/4 w-full py-1 md:py-0'>
-                                <div className='md:text-sm text-lg'>Auction Ongoing</div>
+                {showGallery ? (
+                    totalSupply > 0 ? (
+                        <div className='flex flex-col justify-center md:w-[70%] w-full font-connection md:mt-4 mt-1'>
+                        <div className='p-1 flex flex-row items-center w-full mt-10 text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
+                            <div className='flex md:flex-row flex-col justify-between md:items-center items-start my-1 md:mx-4 mx-2 w-full '>
+                                <div className='text-sm text-lightgrey'>{nftData[galleryID].name}</div>
+                                <p>{nftData[galleryID].description}</p>
                             </div>
-                            <div className='flex md:flex-col justify-between flex-row items-center md:w-1/4 w-full py-1 md:py-0'>
-                                <div>Auction Ends</div>
-                                <div className='text-sm'>{auctionEnd}</div>
+                        </div>
+                        <div className='flex flex-row justify-between items-center md:mt-10 mt-4'>
+                            <button className='w-[24px]'
+                                onClick={() => handleLeftArrowShape()}
+                            >
+                                <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M16 5v2h-2V5h2zm-4 4V7h2v2h-2zm-2 2V9h2v2h-2zm0 2H8v-2h2v2zm2 2v-2h-2v2h2zm0 0h2v2h-2v-2zm4 4v-2h-2v2h2z" fill='#EBEBEB'/> </svg>
+                            </button>
+                            <div className='md:w-[400px] w-[300px] border-2 border-darkgrey'>
+                                <img src={nftData[galleryID].image}/>
                             </div>
-                            <div className='flex md:flex-col justify-between flex-row items-center md:w-1/4 w-full py-1 md:py-0 md:border-b-0 border-b-2 border-lightgrey'>
-                                <div className='text-sm'>Current Bid: {Utils.formatEther(BigInt(highestBid))} ETH</div>
-                                <div>by { highestBidder == address ? 'you' : truncateAddress(highestBidder)}</div>
+                            <button className='w-[24px]'
+                                onClick={() => handleRightArrowShape()}
+                            >
+                                <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M8 5v2h2V5H8zm4 4V7h-2v2h2zm2 2V9h-2v2h2zm0 2h2v-2h-2v2zm-2 2v-2h2v2h-2zm0 0h-2v2h2v-2zm-4 4v-2h2v2H8z" fill='#EBEBEB'/> </svg>
+                            </button>
+                        </div>
+                        <div className='p-1 flex flex-row items-center w-full md:mt-10 mt-4 text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
+                            <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
+                                <div>Artist Signature</div>
+                                <div className='md:text-sm text-lightgrey'>{truncateAddress(nftData[galleryID].artist)}</div>
                             </div>
-                            <div className='flex md:flex-col flex-row md:w-1/4 w-full mt-4 md:mt-0 md:pl-4 md:pr-2 md:justify-center justify-end'>
-                                {width <= breakpoints.md && (
+                            <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
+                                <div>Mint Date</div>
+                                <div className='md:text-sm text-lightgrey'>{mintDate}</div>
+                            </div>
+                            <div className='flex flex-col items-center w-1/3'>
+                                <div>Current Owner</div>
+                                <div className='md:text-sm text-lightgrey'>{currentOwner ==  address? 'you' : truncateAddress(currentOwner)}</div>
+                            </div>
+                        </div>
+                        {showAuction && (
+                            <div className='p-1 flex md:flex-row flex-col items-center w-full md:mt-4 mt-16 text-offblack font-connection md:text-xs text-sm border-2 border-lightgrey bg-white'>                          
+                                <div className='flex md:flex-col justify-between flex-row items-center md:w-1/4 w-full py-1 md:py-0'>
+                                    <div className='md:text-sm text-lg'>Auction Ongoing</div>
+                                </div>
+                                <div className='flex md:flex-col justify-between flex-row items-center md:w-1/4 w-full py-1 md:py-0'>
+                                    <div>Auction Ends</div>
+                                    <div className='text-sm'>{auctionEnd}</div>
+                                </div>
+                                <div className='flex md:flex-col justify-between flex-row items-center md:w-1/4 w-full py-1 md:py-0 md:border-b-0 border-b-2 border-lightgrey'>
+                                    <div className='text-sm'>Current Bid: {Utils.formatEther(BigInt(highestBid))} ETH</div>
+                                    <div>by { highestBidder == address ? 'you' : truncateAddress(highestBidder)}</div>
+                                </div>
+                                <div className='flex md:flex-col flex-row md:w-1/4 w-full mt-4 md:mt-0 md:pl-4 md:pr-2 md:justify-center justify-end'>
+                                    {width <= breakpoints.md && (
+                                        <div className='flex md:flex-row flex-col items-center justify-between gap-3 text-sm'>
+                                            Place your bid: 
+                                        </div>
+                                    )}
                                     <div className='flex md:flex-row flex-col items-center justify-between gap-3 text-sm'>
-                                        Place your bid: 
+                                        <div >
+                                            <input type="text" value={etherBid} onChange={(e) =>handlePriceChange(e)} step="0.01" className='bg-white text-black text-center border-b-2 max-w-[50px]' />
+                                            ETH
+                                        </div>
+                                        <button 
+                                            className={`text-xs py-1 px-2 border-2 flex items-center justify-between gap-2
+                                                        ${isConnected ? 'bg-black text-lightgrey border-darkgrey hover:bg-lightgrey hover:text-black hover:border-lightgrey' : 'bg-darkgrey text-lightgrey border-darkgrey'} 
+                                                        ${!isConnected && 'cursor-not-allowed'}`} 
+                                            disabled={!isConnected || bidLoad}
+                                            onClick={() => handleBidding()}
+                                        >
+                                        <span>
+                                            {bidLoad ? 'Processing...' : isConnected ? 'place bid' : 'please connect' }
+                                        </span>
+                                            {bidLoad ?
+                                                <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
+                                            : isConnected ?  
+                                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M15 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2v-2h2v2H9zm-2 2v-2h2v2H7zm-2 0h2v2H5v-2zm-2-2h2v2H3v-2zm0 0H1v-2h2v2zm8 2h2v2h-2v-2zm4-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2h-2v2h2V8zm0 0h2V6h-2v2z" fill="currentColor"/> </svg>
+                                            : null}
+                                        </button>
                                     </div>
-                                )}
-                                <div className='flex md:flex-row flex-col items-center justify-between gap-3 text-sm'>
-                                    <div >
-                                        <input type="text" value={etherBid} onChange={(e) =>handlePriceChange(e)} step="0.01" className='bg-white text-black text-center border-b-2 max-w-[50px]' />
-                                        ETH
-                                    </div>
-                                    <button 
-                                        className={`text-xs py-1 px-2 border-2 flex items-center justify-between gap-2
-                                                    ${isConnected ? 'bg-black text-lightgrey border-darkgrey hover:bg-lightgrey hover:text-black hover:border-lightgrey' : 'bg-darkgrey text-lightgrey border-darkgrey'} 
-                                                    ${!isConnected && 'cursor-not-allowed'}`} 
-                                        disabled={!isConnected || bidLoad}
-                                        onClick={() => handleBidding()}
-                                    >
-                                    <span>
-                                        {bidLoad ? 'Processing...' : isConnected ? 'place bid' : 'please connect' }
-                                    </span>
-                                        {bidLoad ?
-                                            <SpinningLoader className="ml-auto h-[16px] w-[16px]"/>
-                                        : isConnected ?  
-                                            <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M15 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2v-2h2v2H9zm-2 2v-2h2v2H7zm-2 0h2v2H5v-2zm-2-2h2v2H3v-2zm0 0H1v-2h2v2zm8 2h2v2h-2v-2zm4-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2v2h-2v-2h2zm2-2h-2v2h2V8zm0 0h2V6h-2v2z" fill="currentColor"/> </svg>
-                                        : null}
-                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                    {isConnected && !showAuction && claimsOwnership > 0 && (
+                        )}
+                        {isConnected && !showAuction && claimsOwnership > 0 && (
                         <div className='p-4 md:p-1 flex md:flex-row flex-col items-center w-full mt-4 text-offblack font-connection text-xs border-2 border-lightgrey bg-white'>                          
                             <div className='flex md:flex-col flex-row justify-between items-center md:w-1/4 w-full py-1 md:py-0 border-r-0 md:border-r-2 border-lightrey'>
                                 {width <= breakpoints.md ? (
@@ -524,100 +529,104 @@ const MintPage = ({ setInitialLoading }) => {
                                 </div>
                             </div>
                         </div>
-                    )}
-
-                </div>
-            :
-                <div>
-                    {currentPeriodisArt ? 
+                        )}
+                    </div>
+                    ) : (
+                        <div className="flex flex-row bg-offblack text-left text-white font-connection md:text-md text-sm md:mt-6 mt-4 p-2 border-2 border-darkgrey gap-4">
+                            {width > breakpoints.md && (<svg width='24px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h2v18H3V3zm16 0H5v2h14v14H5v2h16V3h-2zm-8 6h2V7h-2v2zm2 8h-2v-6h2v6z" fill="currentColor"/> </svg>)}
+                            <div className='flex flex-col'>
+                                <p>No NFTs have been minted yet.</p>
+                                <p>Please await our community's first vote and come back to this gallery to check out the newly minted NFTs.</p>
+                            </div>
+                        </div>
+                    )
+                ) : currentPeriodisArt ? (
                     <div className="flex flex-row bg-offblack text-left text-white font-connection md:text-md text-sm md:mt-6 mt-4 p-2 border-2 border-darkgrey gap-4">
-                        {width > breakpoints.md && (<svg width='24px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h2v18H3V3zm16 0H5v2h14v14H5v2h16V3h-2zm-8 6h2V7h-2v2zm2 8h-2v-6h2v6z" fill="currentColor"/> </svg>)}
+                    {width > breakpoints.md && (<svg width='24px' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h2v18H3V3zm16 0H5v2h14v14H5v2h16V3h-2zm-8 6h2V7h-2v2zm2 8h-2v-6h2v6z" fill="currentColor"/> </svg>)}
                         <div className='flex flex-col'>
                             <p>Voting is currently closed, please come back when Artistic Period has ended.</p>
-                            <p>In the meantime, feel free to check out the Gallery.</p>
+                            <p>{totalSupply > 0? 'In the meantime, feel free to check out the Gallery.':''}</p>
                         </div>
                     </div>
-                    :
-                    
-                        <div className='flex md:flex-row flex-col md:mt-4 mt-8 justify-between items-center font-connection'>
-                            <div className='flex flex-col justify-center h-full'>
-                                <div className='p-1 flex flex-row items-center w-full text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
-                                    <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
-                                        <div>Yes</div>
-                                        <div className='text-sm text-lightgrey'>{yesVotes} | {totalVotes > 0 ? (Math.round(yesVotes/totalVotes*1000)/1000) *100 : 0}%</div>
-                                    </div>
-                                    <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
-                                        <div>Total Votes</div>
-                                        <div className='text-sm text-lightgrey'>{totalVotes}</div>
-                                    </div>
-                                    <div className='flex flex-col items-center w-1/3'>
-                                        <div>No</div>
-                                        <div className='text-sm text-lightgrey'>{noVotes} | {totalVotes > 0 ? (Math.round(noVotes/totalVotes*1000)/1000) *100 : 0}%</div>
-                                    </div>
-                                </div> 
-                                <div className='p-1 flex flex-row justify-center items-center w-full px-2 text-lightgrey font-connection text-sm border-b-2 border-r-2 border-l-2 border-darkgrey bg-offblack'>
-                                    <div className='flex flex-1 justify-start text-left'>Vote Closes</div>
-                                    <div className='flex flex-1 justify-end text-right'>{timeLeft}</div>
-                                </div>
-                            
-                                {isConnected && (
-                                    <div className='text-left text-white text-md mt-6'>
-                                        {!userAlreadyVoted ?
-                                            <div className='bg-offblack md:text-xs text-sm border-darkgrey p-2 border-2'>
-                                                <p className='mb-2 '><span className='border-b-2 border-lightgrey'>{truncateAddress(address)}</span>, do you think this period's canvas should be minted as NFT?</p>
-                                                <p>you currently own {userBalance} pixels - your vote will count for {userBalance}/4096 possible votes ({(Math.round(userBalance/4096*1000)/1000) *100} %)</p>
-                                            </div>    
-                                        :
-                                            <p className='bg-offblack md:text-xs text-sm border-darkgrey p-2 border-2'><span className='border-b-2 border-lightgrey'>{truncateAddress(address)}</span> you have already casted your vote for this canvas.</p> 
-                                        }
-                                        
-                                        {!userAlreadyVoted && (
-                                        <div className='flex flex-row justify-between items-center md:mt-4 mt-2 gap-2 md:gap-1'>
-                                            <button className='md:text-xs text-sm bg-black text-lightgrey border-darkgrey hover:bg-darkgrey border-2 py-1 px-2 w-full flex items-center justify-between' 
-                                                onClick={() => handleVoting(false)}
-                                            >
-                                                <span>
-                                                    No - don't mint
-                                                </span>
-                                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/>
-                                                </svg>
-                                            </button>
-                                            <button className='md:text-xs text-sm text-black bg-lightgrey border-2 border-darkgrey hover:border-lightgrey py-1 px-2 w-full flex items-center justify-between' 
-                                                onClick={() => handleVoting(true)}
-                                            >
-                                                <span>
-                                                    Yes - mint
-                                                </span>
-                                                <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <path d="M18 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2h2v-2h-2v2zm-2 2h2v-2h-2v2zm-2 0v2h2v-2H8zm-2-2h2v2H6v-2zm0 0H4v-2h2v2z" fill="currentColor"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        )}
-                                    </div>
-                                )}
-                                {!isConnected && (
-                                    <div className='text-left text-white text-md md:mt-20 mt-6'>    
-                                        <div className='md:text-xs text-sm p-2'>
-                                            <p>If you are a pixel owner, please connect wallet to vote</p>
-                                        </div>    
-                                    </div>
-                                )}
+                ) : (
+                    <div className='flex md:flex-row flex-col md:mt-4 mt-8 justify-between items-center font-connection'>
+                    <div className='flex flex-col justify-center h-full'>
+                        <div className='p-1 flex flex-row items-center w-full text-black font-connection text-xs border-2 border-darkgrey bg-offblack'>
+                            <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
+                                <div>Yes</div>
+                                <div className='text-sm text-lightgrey'>{yesVotes} | {totalVotes > 0 ? (Math.round(yesVotes/totalVotes*1000)/1000) *100 : 0}%</div>
                             </div>
-                            <div className='flex justify-center items-center md:w-1/2 w-full h-full mt-8 md:mt-0'>        
-                                    <svg className='border-2 border-darkgrey' width="392" height="392" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 392">
-                                        {pixels.map((pixel, i) => {
-                                            const x = (i % 64) * (squareSize + gap)+4; 
-                                            const y = Math.floor(i / 64) * (squareSize + gap)+4;
-                                            return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel);
-                                        })}
-                                    </svg>
+                            <div className='flex flex-col items-center w-1/3 border-r-2 border-darkgrey'>
+                                <div>Total Votes</div>
+                                <div className='text-sm text-lightgrey'>{totalVotes}</div>
                             </div>
+                            <div className='flex flex-col items-center w-1/3'>
+                                <div>No</div>
+                                <div className='text-sm text-lightgrey'>{noVotes} | {totalVotes > 0 ? (Math.round(noVotes/totalVotes*1000)/1000) *100 : 0}%</div>
+                            </div>
+                        </div> 
+                        <div className='p-1 flex flex-row justify-center items-center w-full px-2 text-lightgrey font-connection text-sm border-b-2 border-r-2 border-l-2 border-darkgrey bg-offblack'>
+                            <div className='flex flex-1 justify-start text-left'>Vote Closes</div>
+                            <div className='flex flex-1 justify-end text-right'>{timeLeft}</div>
                         </div>
-                    }
-                </div>
-            }
+                    
+                        {isConnected && (
+                            <div className='text-left text-white text-md mt-6'>
+                                {!userAlreadyVoted ?
+                                    <div className='bg-offblack md:text-xs text-sm border-darkgrey p-2 border-2'>
+                                        <p className='mb-2 '><span className='border-b-2 border-lightgrey'>{truncateAddress(address)}</span>, do you think this period's canvas should be minted as NFT?</p>
+                                        <p>you currently own {userBalance} pixels - your vote will count for {userBalance}/4096 possible votes ({(Math.round(userBalance/4096*1000)/1000) *100} %)</p>
+                                    </div>    
+                                :
+                                    <p className='bg-offblack md:text-xs text-sm border-darkgrey p-2 border-2'><span className='border-b-2 border-lightgrey'>{truncateAddress(address)}</span> you have already casted your vote for this canvas.</p> 
+                                }
+                                
+                                {!userAlreadyVoted && (
+                                <div className='flex flex-row justify-between items-center md:mt-4 mt-2 gap-2 md:gap-1'>
+                                    <button className='md:text-xs text-sm bg-black text-lightgrey border-darkgrey hover:bg-darkgrey border-2 py-1 px-2 w-full flex items-center justify-between' 
+                                        onClick={() => handleVoting(false)}
+                                    >
+                                        <span>
+                                            No - don't mint
+                                        </span>
+                                        <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M5 5h2v2H5V5zm4 4H7V7h2v2zm2 2H9V9h2v2zm2 0h-2v2H9v2H7v2H5v2h2v-2h2v-2h2v-2h2v2h2v2h2v2h2v-2h-2v-2h-2v-2h-2v-2zm2-2v2h-2V9h2zm2-2v2h-2V7h2zm0 0V5h2v2h-2z" fill="currentColor"/>
+                                        </svg>
+                                    </button>
+                                    <button className='md:text-xs text-sm text-black bg-lightgrey border-2 border-darkgrey hover:border-lightgrey py-1 px-2 w-full flex items-center justify-between' 
+                                        onClick={() => handleVoting(true)}
+                                    >
+                                        <span>
+                                            Yes - mint
+                                        </span>
+                                        <svg className="ml-auto h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M18 6h2v2h-2V6zm-2 4V8h2v2h-2zm-2 2v-2h2v2h-2zm-2 2h2v-2h-2v2zm-2 2h2v-2h-2v2zm-2 0v2h2v-2H8zm-2-2h2v2H6v-2zm0 0H4v-2h2v2z" fill="currentColor"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                )}
+                            </div>
+                        )}
+                        {!isConnected && (
+                            <div className='text-left text-white text-md md:mt-20 mt-6'>    
+                                <div className='md:text-xs text-sm p-2'>
+                                    <p>If you are a pixel owner, please connect wallet to vote</p>
+                                </div>    
+                            </div>
+                        )}
+                    </div>
+                        <div className='flex justify-center items-center md:w-1/2 w-full h-full mt-8 md:mt-0'>        
+                            <svg className='border-2 border-darkgrey' width="392" height="392" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 392">
+                                {pixels.map((pixel, i) => {
+                                    const x = (i % 64) * (squareSize + gap)+4; 
+                                    const y = Math.floor(i / 64) * (squareSize + gap)+4;
+                                    return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel);
+                                })}
+                            </svg>
+                    </div>
+                    </div>
+                )}
+
             </div>
         </div>
     )

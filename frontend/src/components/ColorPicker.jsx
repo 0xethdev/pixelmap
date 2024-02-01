@@ -8,6 +8,8 @@ const ColorPicker = ({ onSelect, onClose }) => {
     const handleConfirmation = () => {
         onSelect(color);
     }
+    
+    
 
     return (
         <div className='flex flex-col bg-offblack text-white font-connection'>

@@ -20,7 +20,7 @@ const faqData = [
     },
     {
         question: "WHAT IF I AM NOT SURE HOW TO BEST USE THE PIXELS I OWN?",
-        answer: "That is not a problem, on the left side of the screen you will find a Test Canvas button which will load the latest canvas from the blockchain and place it in demo mode. This allows you to freely test any color and shape combination you like before actually committing these changes to the blockchain. Also, this test canvas allows you to test changes to pixels you currently don't own, thus helping you make more informed purchasing decisions."
+        answer: "That is not a problem, go to the desktop version of our site and on the left side of the screen you will find a Test Canvas button which will load the latest canvas from the blockchain and place it in demo mode. This allows you to freely test any color and shape combination you like before actually committing these changes to the blockchain. Also, this test canvas allows you to test changes to pixels you currently don't own, thus helping you make more informed purchasing decisions."
     },
     {
         question: "WHAT ARE HARBERGER TAXES?",
@@ -86,7 +86,7 @@ const FAQ = ({ setInitialLoading }) => {
                         {index +1}. {faq.question}
                     
                     <div
-                        className={` text-left text-darkgrey p-2 mb-2 ${activeIndex === index ? 'block' : 'hidden'}`}
+                        className={` text-left text-lightgrey p-2 mb-2 ${activeIndex === index ? 'block' : 'hidden'}`}
                     >
                         {faq.answer}
                     </div>

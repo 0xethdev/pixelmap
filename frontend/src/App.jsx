@@ -39,7 +39,7 @@ function App() {
 
   const config = createConfig(
     getDefaultConfig({
-      alchemyId: import.meta.env.VITE_SEPOLIA_TESTNET,
+      alchemyId: import.meta.env.VITE_ETH_MAINNET,
       walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
       chains: [frameTestnet],
       appName: "Pixel Map",

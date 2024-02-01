@@ -24,7 +24,7 @@ contract Pixelmap is ReentrancyGuard {
     uint private constant VOTING_PERIOD = 1 days;
     uint public constant CYCLE_PERIOD = ARTISTIC_PERIOD + VOTING_PERIOD;
     uint public constant AUCTION_DURATION = 18 hours;
-    uint private canvasCreation;
+    uint public canvasCreation;
     uint private constant royaltyAskPeriod = 3 days;
     uint private constant PIXEL_WIDTH_HEIGHT = 8;
 
