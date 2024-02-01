@@ -5,6 +5,7 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "hardhat/console.sol";
 
 interface Pixelmap {
     function generateSVG() external view returns (string memory);
@@ -62,7 +63,6 @@ contract CanvasCollection is ERC721A, Ownable {
     }
 
     function getTokenURI(uint256 tokenId) internal view returns (string memory){
-        
         bytes memory dataURI = abi.encodePacked(
             '{',
                 '"name": "Pixel Canvas #', Strings.toString(tokenId), '",',

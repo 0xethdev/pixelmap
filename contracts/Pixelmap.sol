@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./Merkle.sol";
@@ -15,9 +16,9 @@ contract Pixelmap is ReentrancyGuard {
     CanvasCollection public nftContract;
 
     address public manager;
-    uint public constant maxWidth = 64;
-    uint public constant maxHeight = 64;
-    uint public royaltyRate = 50; // rate per 1'000
+    uint8 public constant maxWidth = 64;
+    uint8 public constant maxHeight = 64;
+    uint8 public royaltyRate = 50; // rate per 1'000
     uint public constant royaltyDenominator = 1000;
     uint public constant ARTISTIC_PERIOD = 3 days;
     uint public constant VOTING_PERIOD = 1 days;
@@ -35,7 +36,7 @@ contract Pixelmap is ReentrancyGuard {
 
     struct Pixel {
         address owner;
-        uint shapeID;
+        uint8 shapeID;
         uint price;
         string color;
         uint royaltyLastPaid;
@@ -62,7 +63,7 @@ contract Pixelmap is ReentrancyGuard {
     mapping (uint => mapping (address => bool)) public auctionClaimsFlag;
     
     /// The window is a map that fits "width -> (height -> pixel)"
-    mapping (uint => mapping (uint => Pixel)) public window;
+    mapping (uint8 => mapping (uint8 => Pixel)) public window;
     string[4096] public pixelSVGs;
     string[64] public rowSVGs;
     /// Balance mapping of owner address to number of pixels owned
@@ -128,7 +129,7 @@ contract Pixelmap is ReentrancyGuard {
         bool[] memory uniqueRows = new bool[](64);
         
         for (uint i=0; i < length; i++){
-            (uint _x, uint _y, uint _shape, string memory _color) = abi.decode(_pixels[i], (uint, uint, uint, string));
+            (uint8 _x, uint8 _y, uint8 _shape, string memory _color) = abi.decode(_pixels[i], (uint8, uint8, uint8, string));
             if (isOutOfBound(_x,_y)) {
                 revert('pixel is out of bounds');
             }
@@ -147,7 +148,7 @@ contract Pixelmap is ReentrancyGuard {
     
             }
         }
-        for(uint row = 0; row < 64;){
+        for(uint8 row = 0; row < 64;){
             if(uniqueRows[row]){
                 rowSVGs[row] = generateSVGRow(row);
             }
@@ -156,7 +157,7 @@ contract Pixelmap is ReentrancyGuard {
     }
 
     /// Function to set color on multiple pixels. inputs encoded as x, y, color
-    function setPixelValue (uint[] calldata xValues, uint[] calldata yValues, uint[] calldata priceValues) external {
+    function setPixelValue (uint8[] calldata xValues, uint8[] calldata yValues, uint[] calldata priceValues) external {
         require(xValues.length == yValues.length && xValues.length == priceValues.length, 'input arrays must be of the same length');
         
         uint length = xValues.length;
@@ -177,7 +178,7 @@ contract Pixelmap is ReentrancyGuard {
     }
 
 
-    function payRoyalties (uint[] calldata xValues, uint[] calldata yValues) public {
+    function payRoyalties (uint8[] calldata xValues, uint8[] calldata yValues) public {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
@@ -204,7 +205,7 @@ contract Pixelmap is ReentrancyGuard {
         }
     }
 
-    function buyPixel(uint[] calldata xValues, uint[] calldata yValues) external {
+    function buyPixel(uint8[] calldata xValues, uint8[] calldata yValues) external {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
@@ -242,7 +243,7 @@ contract Pixelmap is ReentrancyGuard {
         }
     }
 
-    function seekRoyaltyPayment(uint x, uint y, uint _price) external isManager {
+    function seekRoyaltyPayment(uint8 x, uint8 y, uint _price) external isManager {
         if(window[x][y].askedToPayRoyalties && block.timestamp > window[x][y].royaltyAskDate + royaltyAskPeriod){
             window[x][y].price = _price;
             window[x][y].askedToPayRoyalties = false;
@@ -255,12 +256,12 @@ contract Pixelmap is ReentrancyGuard {
     }
 
     /// Function used to check the current status of the pixel at (x,y).
-    function checkPixel(uint x, uint y) public view returns(Pixel memory) {
+    function checkPixel(uint8 x, uint8 y) public view returns(Pixel memory) {
         require(x < maxWidth && y < maxHeight, 'pixel out of bounds');
         return window[x][y];
     }
 
-    function checkMultiplePixel (uint[] calldata xValues, uint[] calldata yValues) external view returns(Pixel[] memory) {
+    function checkMultiplePixel (uint8[] calldata xValues, uint8[] calldata yValues) external view returns(Pixel[] memory) {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         uint length = xValues.length;
         Pixel[] memory results = new Pixel[](length);
@@ -275,11 +276,11 @@ contract Pixelmap is ReentrancyGuard {
     }
 
     /// Function that checks whether the parameters are out of bound respect to the current window.
-    function isOutOfBound(uint x, uint y) internal pure returns(bool) {
+    function isOutOfBound(uint8 x, uint8 y) internal pure returns(bool) {
         return x < 0 || y < 0 || x >= maxWidth || y >= maxHeight;
     }
 
-    function calculateRoyalties(uint x, uint y) public view returns (uint) {
+    function calculateRoyalties(uint8 x, uint8 y) public view returns (uint) {
         uint timePeriod = block.timestamp - window[x][y].royaltyLastPaid;
         return (timePeriod * window[x][y].price * royaltyRate) / (360 days * royaltyDenominator);
     }
@@ -346,8 +347,8 @@ contract Pixelmap is ReentrancyGuard {
         require(nftAuctions[_tokenID].auctionEnd < block.timestamp, 'auction not ended yet');
 
         if(nftAuctions[_tokenID].winningAddr == address(0)){
-            uint randomX = uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 64;
-            uint randomY = uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 64;
+            uint8 randomX = uint8(uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 64);
+            uint8 randomY = uint8(uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % 64);
 
             nftAuctions[_tokenID].auctionEnded = true;
             nftContract.safeTransferFrom(address(this), window[randomX][randomY].owner, _tokenID);
@@ -359,8 +360,8 @@ contract Pixelmap is ReentrancyGuard {
             emit AuctionEnded(_tokenID, nftAuctions[_tokenID].winningAddr, nftAuctions[_tokenID].winningBid);
         }
 
-        for (uint x = 0; x < 64;) {
-            for (uint y = 0; y < 64;) {
+        for (uint8 x = 0; x < 64;) {
+            for (uint8 y = 0; y < 64;) {
                 address owner = window[x][y].owner;
                 auctionClaims[_tokenID][owner] = balanceOf[owner];
                 unchecked{y++;}
@@ -430,7 +431,7 @@ contract Pixelmap is ReentrancyGuard {
     /// ART FUNCTIONS
     /// ================================================================================
 
-    function generateShapeSVG(uint shapeID, uint x, uint y, string memory color) internal pure returns (string memory) {
+    function generateShapeSVG(uint8 shapeID, uint x, uint y, string memory color) internal pure returns (string memory) {
         if (shapeID == 0) {
             return string(abi.encodePacked(
                 '<rect x="', uint2str(x) ,
@@ -520,7 +521,7 @@ contract Pixelmap is ReentrancyGuard {
     function generateSVG() public view returns (string memory) {
         string memory svgString = '<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">';
         
-        for (uint i = 0; i < 64; i++) {
+        for (uint8 i = 0; i < 64; i++) {
             svgString = string(abi.encodePacked(svgString, rowSVGs[i]));
         }
 
@@ -555,8 +556,8 @@ contract Pixelmap is ReentrancyGuard {
         bytes32[] memory data = new bytes32[](4096);
         for (uint y = 0; y < 64;){
             for(uint x = 0; x < 64;){
-                uint pixelID = x + 64 * y;
-                data[pixelID] = bytes32(uint256(uint160(window[x][y].owner)) << 96);
+                uint256 pixelID = x + 64 * y;
+                data[pixelID] = bytes32(uint256(uint160(window[uint8(x)][uint8(y)].owner)) << 96);
                 unchecked{x++;}
             }
             unchecked{y++;}

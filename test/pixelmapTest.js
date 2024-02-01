@@ -54,21 +54,21 @@ describe('PixelMap', function () {
     let y1 = 1;
     let shape1 = 4;
     let color1 = '#FF0000';
-    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x1, y1, shape1, color1]);
     inputArray.push(input1);
 
     let x2 = 2;
     let y2 = 2;
     let shape2 = 6;
     let color2 = '#FF1000';
-    let input2 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x2, y2, shape2, color2]);
+    let input2 = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x2, y2, shape2, color2]);
     inputArray.push(input2);
 
     let x3 = 3;
     let y3 = 3;
     let shape3 = 8;
     let color3 = '#FF2000';
-    let input3 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256","uint256", "string"], [x3, y3, shape3, color3]);
+    let input3 = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8","uint8", "string"], [x3, y3, shape3, color3]);
     inputArray.push(input3);
 
     await contract.connect(buyer).buyPixel([x1, x2, x3], [y1, y2, y3]);
@@ -99,7 +99,7 @@ describe('PixelMap', function () {
     
     let color = '#FF0000';
     let askPrice = ethers.parseEther('0.05').toString();
-    let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x, y, 3, color]);
+    let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x, y, 3, color]);
     await contract.connect(buyer).fillPixel([input]);
     await contract.connect(buyer).setPixelValue([x],[y],[askPrice]);
     const [owner2, shape2, price2, returnedColor2] = await contract.checkPixel(x, y);
@@ -128,7 +128,7 @@ describe('PixelMap', function () {
     
     let color = '#FF0000';
     let askPrice = ethers.parseEther('100').toString();
-    let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x, y, 3, color]);
+    let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x, y, 3, color]);
     await contract.connect(buyer).fillPixel([input]);
     await contract.connect(buyer).setPixelValue([x],[y],[askPrice]);
     const [owner2, shape2, price2, returnedColor2] = await contract.checkPixel(x, y);
@@ -158,7 +158,7 @@ describe('PixelMap', function () {
     
     let color = '#FF0000';
     let askPrice = ethers.parseEther('50').toString();
-    let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x, y, 3, color]);
+    let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x, y, 3, color]);
     await contract.connect(buyer).fillPixel([input]);
     await contract.connect(buyer).setPixelValue([x],[y],[askPrice]);
     const [owner3, shape3, price3, returnedColor3] = await contract.checkPixel(x, y);
@@ -209,7 +209,7 @@ describe('PixelMap', function () {
     let color = '#FF0000';
 
     for (let y = 0; y<10; y++){
-      let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [y, 0, y, color]);
+      let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [y, 0, y, color]);
       inputArray.push(input);
     }
     
@@ -262,7 +262,7 @@ describe('PixelMap', function () {
     let y1 = 1;
     let shape1 = 4;
     let color1 = '#FF0000';
-    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x1, y1, shape1, color1]);
     inputArray.push(input1);
 
     await contract.connect(buyer).buyPixel([x1], [y1]);
@@ -285,7 +285,7 @@ describe('PixelMap', function () {
     let y1 = 1;
     let shape1 = 4;
     let color1 = '#FF0000';
-    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x1, y1, shape1, color1]);
     inputArray.push(input1);
 
     await contract.connect(buyer).buyPixel([x1], [y1]);
@@ -304,7 +304,6 @@ describe('PixelMap', function () {
     await time.increase(60*60*24*1 +3);
     let response = await contract.checkVoteOutcome(0);
     await response.wait();
-    
     let response2 = await nftContract.tokenURI(0);
     //console.log(response2);
 
@@ -317,7 +316,7 @@ describe('PixelMap', function () {
     let y1 = 1;
     let shape1 = 4;
     let color1 = '#FF0000';
-    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint256", "uint256", "uint256", "string"], [x1, y1, shape1, color1]);
+    let input1 = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x1, y1, shape1, color1]);
     inputArray.push(input1);
 
     await contract.connect(buyer).buyPixel([x1], [y1]);
@@ -399,7 +398,7 @@ describe('PixelMap', function () {
     let balance1 = await ethers.provider.getBalance(buyer.address);
     await contract.connect(buyer).withdrawPixelProceeds(0)
     let balance2 = await ethers.provider.getBalance(buyer.address);
-    console.log(ethers.formatEther(balance1), ethers.formatEther(balance2), ethers.formatEther(balance2 - balance1));
+    //console.log(ethers.formatEther(balance1), ethers.formatEther(balance2), ethers.formatEther(balance2 - balance1));
 
   });
 
