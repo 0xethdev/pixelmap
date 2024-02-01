@@ -15,7 +15,7 @@ const wETH_ABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":
 
 const timeOffset = 0;
 
-const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSetPixelData, tempPixelData, setTempPixelData }) => {
+const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSetPixelData, tempPixelData, setTempPixelData, setPriceFilterFlag, setPriceFilterValue }) => {
     const { isConnected, address } = useAccount();
     const { currentPeriodisArt, cycleEndTime } = useContext(PeriodContext);
     const { tokenBalance, tokenAllowance, refreshBalanceData } = useContext(UserBalanceContext);
@@ -37,6 +37,14 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
     const [ colorPickerIndex, setColorPickerIndex ] = useState('');
     
     const shapes = [0,1,2,3,4,5,6,7,8,9];
+
+    const handleFilterToggle = () => {
+        if(!filterActive){
+            setPriceFilterFlag(false);
+            setPriceFilterValue('');
+        }
+        setFilterActive(!filterActive)
+    }
     
     const renderShape = (shapeID, color) => {
         const size = 12;
@@ -299,7 +307,7 @@ const PixelPortfolio = ({ filterActive, setFilterActive, setPixelData, toggleSet
     return (
         <div className='flex flex-col w-[100%] p-2 text-white font-connection border-2 border-darkgrey bg-offblack'>
             <div className='flex flex-row justify-end items-center pb-2 border-darkgrey'>
-                <button className={`border-2 py-1 px-2 text-xs ${!filterActive ? ' text-black bg-lightgrey border-darkgrey hover:border-lightgrey' : 'bg-black text-lightgrey border-darkgrey hover:border-black'}`} onClick={() => setFilterActive(!filterActive)}>
+                <button className={`border-2 py-1 px-2 text-xs ${!filterActive ? ' text-black bg-lightgrey border-darkgrey hover:border-lightgrey' : 'bg-black text-lightgrey border-darkgrey hover:border-black'}`} onClick={() => handleFilterToggle()}>
                     {!filterActive ?
                     <svg className="h-[16px] w-[16px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M4 5h16v2H4V5zm0 12H2V7h2v10zm16 0v2H4v-2h16zm0 0h2V7h-2v10zM10 9H6v6h4V9z" fill="currentColor"/> </svg>
                     :

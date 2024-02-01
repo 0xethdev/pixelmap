@@ -140,7 +140,7 @@ const GeneralInfo = ({ pixels }) => {
     );
 };
 
-const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDragSelectedPixels, selectedPixels }) => {
+const ArtisticGrid = React.memo(({ grid, handlePixelClick, priceFilterFlag, priceFilterValue, filterActive, setFilterActive, setPriceFilterValue, setPriceFilterFlag, addDragSelectedPixels, selectedPixels }) => {
     const [hoveredPixel, setHoveredPixel] = useState(null);
     const { address, isConnected } = useAccount();
     const [searchInputX, setSearchInputX] = useState('');
@@ -216,6 +216,7 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDrag
         let newValue = Math.max(0, Math.min(63, Number(e.target.value)));
         setSearchInputY(newValue);
     }
+    
     const handleSerachClick = () => {
         const foundPixel = grid.find(pixel => {
             const pixelX = pixel.x;
@@ -227,6 +228,15 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDrag
             setSearchInputX('');
             setSearchInputY('');
         }
+    }
+
+    const handlePriceInput = (e) => {
+        let newValue = Math.max(0, Number(e.target.value));
+        setPriceFilterValue(newValue);
+    }
+    const handlePriceFilterToggle = () => {
+        setFilterActive(false);
+        setPriceFilterFlag(!priceFilterFlag);
     }
 
     useEffect(() => {
@@ -250,7 +260,23 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDrag
     return (
         <div className='flex flex-col items-center'>
             <GeneralInfo pixels={grid} />
-            <div className='flex flex-row justify-between items-center w-[512px] mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey my-2 py-1 px-2'>
+            <div className='flex flex-row justify-between items-center w-[512px] mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey mt-2 mb-1 py-1 px-2'>
+                <span className='w-1/2' >pixel price filter</span>
+                <div className='flex flex-row justify-center items-center w-1/2'>
+                    <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={priceFilterValue} onChange={(e) => handlePriceInput(e)} placeholder="price (ETH)"/>
+                    <button
+                        className='ml-auto'
+                        onClick={() => handlePriceFilterToggle()}
+                    >
+                        {priceFilterFlag ?
+                            <svg className="ml-auto h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M5 3H3v18h18V3H5zm0 2h14v14H5V5zm4 7H7v2h2v2h2v-2h2v-2h2v-2h2V8h-2v2h-2v2h-2v2H9v-2z" fill="currentColor"/> </svg>
+                        :
+                            <svg className="ml-auto h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" fill="currentColor"/> </svg>
+                        }
+                    </button>
+                </div>
+            </div>
+            <div className='flex flex-row justify-between items-center w-[512px] mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey mt-1 mb-2 py-1 px-2'>
                 <span className='w-1/5' >pixel search</span>
                 <div className='flex flex-row justify-center items-center'>
                     <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputX} onChange={(e) => handleInputX(e)} min="0" max="63" placeholder="X: 0-63"/>
@@ -287,7 +313,7 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, filterActive, addDrag
                             isDimmed = !isWithinDragRange;
                         } else {
                             // Apply filter if active when not dragging
-                            isDimmed = isConnected && filterActive && !isOwnedByUser;
+                            isDimmed = isConnected && filterActive && !isOwnedByUser || priceFilterFlag && pixel.price > priceFilterValue;
                         }
 
                         return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, handleMouseOver, handlePixelClick, handleMouseDown, handleMouseUp, isDimmed);

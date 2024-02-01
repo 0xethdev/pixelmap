@@ -58,20 +58,23 @@ const ProgressBar = ({ progress }) => {
 };
 
 
-const MobileArtGrid = ({grid }) => {
+const MobileArtGrid = ({grid, priceFilterFlag, priceFilterValue, setMobileHighlightPixel }) => {
     const { address, isConnected } = useAccount();
     const squareSize = 7; // Size of each square
     const gap = 1; // Gap between squares
+
+    const handlePixelSelection = (pixel) => {
+        setMobileHighlightPixel({x:pixel.x, y:pixel.y});
+    }
 
     return (
         <svg width='100%' className="canvas-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520">
                 {grid.map((pixel, i) => {
                     const x = (i % 64) * (squareSize + gap)+4; 
                     const y = Math.floor(i / 64) * (squareSize + gap)+4;
-                    const isOwnedByUser = pixel.owner === address;
-                    //const isDimmed = isConnected && filterActive && !isOwnedByUser;
+                    const isDimmed = priceFilterFlag && pixel.price > priceFilterValue;
                     
-                return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, null, null, null, null, false);
+                return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, null, handlePixelSelection, null, null, isDimmed);
             })}
         </svg>
     )
@@ -146,6 +149,8 @@ const Canvas = ({ setInitialLoading }) => {
     const [currentPixel, setCurrentPixel] = useState();
     const [toggleMobileSideBar, setToggleMobileSideBar] = useState(false);
     const [toggleMobilePortfolio, setToggleMobilePortfolio] = useState(false);
+    const [priceFilterFlag, setPriceFilterFlag] = useState(false);
+    const [priceFilterValue, setPriceFilterValue] = useState('');
     
     const handleCloseMobileSideBar = () => {
         setToggleMobileSideBar(false);
@@ -211,6 +216,7 @@ const Canvas = ({ setInitialLoading }) => {
             }
         }
     },[pixels]);
+
     useEffect(() => {
         const foundPixel = pixels.find(pixel => pixel.x === mobileHighlightPixel.x && pixel.y === mobileHighlightPixel.y);
         setCurrentPixel(foundPixel);
@@ -258,6 +264,16 @@ const Canvas = ({ setInitialLoading }) => {
         newSelectedPixels.splice(index, 1);
         setSelectedPixels(newSelectedPixels);
     };
+
+    const handlePriceInput = (e) => {
+        let newValue = Math.max(0, Number(e.target.value));
+        setPriceFilterValue(newValue);
+    }
+    const handlePriceFilterToggle = () => {
+        setFilterActive(false);
+        setPriceFilterFlag(!priceFilterFlag);
+        console.log(priceFilterFlag)
+    }
 
 
     if (loading) {
@@ -308,7 +324,7 @@ const Canvas = ({ setInitialLoading }) => {
                     </div>
                     <div className='flex flex-col w-3/5'>
                         <div className="flex justify-center items-top ">
-                            <Art grid={ setPixelData ? tempPixelData : pixels} handlePixelClick={handlePixelClick} filterActive={filterActive} addDragSelectedPixels={addDragSelectedPixels} selectedPixels={selectedPixels}/>
+                            <Art grid={ setPixelData ? tempPixelData : pixels} handlePixelClick={handlePixelClick} filterActive={filterActive} setFilterActive={setFilterActive} addDragSelectedPixels={addDragSelectedPixels} selectedPixels={selectedPixels} priceFilterFlag={priceFilterFlag} setPriceFilterValue={setPriceFilterValue} setPriceFilterFlag={setPriceFilterFlag} priceFilterValue={priceFilterValue}/>
                         </div>
                         
                     </div>
@@ -317,6 +333,7 @@ const Canvas = ({ setInitialLoading }) => {
                             filterActive={filterActive} setFilterActive={setFilterActive}
                             setPixelData={setPixelData} toggleSetPixelData={toggleSetPixelData}
                             tempPixelData={tempPixelData} setTempPixelData={setTempPixelData}
+                            setPriceFilterFlag={setPriceFilterFlag} setPriceFilterValue={setPriceFilterValue}
                             />
                     </div>
                     
@@ -368,9 +385,25 @@ const Canvas = ({ setInitialLoading }) => {
                 </div>
                     
                     <div className='flex items-center justify-center mt-4'>
-                        <MobileArtGrid grid={pixels} />
+                        <MobileArtGrid grid={pixels} priceFilterFlag={priceFilterFlag} priceFilterValue={priceFilterValue} setMobileHighlightPixel={setMobileHighlightPixel} />
                     </div>
-                    <div className='flex flex-row justify-between items-center mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey my-2 py-2 px-2'>
+                    <div className='flex flex-row justify-between items-center mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey mt-2 mb-1 py-2 px-2'>
+                        <span className='w-1/2' >pixel price filter</span>
+                        <div className='flex flex-row justify-center items-center w-1/2'>
+                            <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={priceFilterValue} onChange={(e) => handlePriceInput(e)} placeholder="price (ETH)"/>
+                            <button
+                                className='ml-auto'
+                                onClick={() => handlePriceFilterToggle()}
+                            >
+                                {priceFilterFlag ?
+                                    <svg className="ml-auto h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M5 3H3v18h18V3H5zm0 2h14v14H5V5zm4 7H7v2h2v2h2v-2h2v-2h2v-2h2V8h-2v2h-2v2h-2v2H9v-2z" fill="currentColor"/> </svg>
+                                :
+                                    <svg className="ml-auto h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z" fill="currentColor"/> </svg>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                    <div className='flex flex-row justify-between items-center mx-2 text-lightgrey font-connection text-sm border-2 border-darkgrey mt-1 mb-2 py-2 px-2'>
                         <span className='w-3/5' >pixel search</span>
                         <div className='flex flex-row justify-center items-center'>
                             <input className='w-20 text-center bg-inherit hide-arrows-number-input' type="number" value={searchInputX} onChange={(e) => handleInputX(e)} min="0" max="63" placeholder="X: 0-63"/>
