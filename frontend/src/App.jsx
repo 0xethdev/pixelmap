@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { Routes, Route } from "react-router-dom";
 import { mainnet, sepolia, localhost } from 'wagmi/chains'
+import { defineChain } from 'viem'
 import { WagmiConfig, createConfig } from 'wagmi'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
 import { PixelProvider } from './components/PixelContext';
@@ -13,6 +14,24 @@ import Info from './components/Info'
 import MintPage from './components/MintPage'
 import FAQ from './components/FAQ'
 import Banner from './components/Banner'
+import { frame } from "framer-motion";
+
+const frameTestnet = {
+  id: 68840142,
+  sourceId: 11155111,
+  name: 'Frame Testnet',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls:{
+    default: {http: ['https://rpc.testnet.frame.xyz/http']},
+    alchemy:{http: ['https://rpc.testnet.frame.xyz/http']},
+    infura:{http: ['https://rpc.testnet.frame.xyz/http']},
+    public:{http: ['https://rpc.testnet.frame.xyz/http']},
+  },
+  blockExplorers: {
+    default: { name: 'Frame Explorer', url: 'https://explorer.testnet.frame.xyz' },
+  },
+  testnet:true
+} 
 
 function App() {
   const [selectedPage, setSelectedPage] = useState(localStorage.getItem('selectedPage') || '');
@@ -20,19 +39,10 @@ function App() {
 
   const config = createConfig(
     getDefaultConfig({
-      // Required API Keys
-      //alchemyId: import.meta.env.VITE_ETH_MAINNET,
       alchemyId: import.meta.env.VITE_SEPOLIA_TESTNET,
       walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
-      chains: [sepolia],
-      
-      // Required
+      chains: [frameTestnet],
       appName: "Pixel Map",
-  
-      // Optional
-      // appDescription: "Your App Description",
-      // appUrl: "https://family.co", // your app's url
-      // appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
     }),
   );
 
