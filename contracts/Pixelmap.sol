@@ -16,16 +16,16 @@ contract Pixelmap is ReentrancyGuard {
     CanvasCollection public nftContract;
 
     address public manager;
-    uint8 public constant maxWidth = 64;
-    uint8 public constant maxHeight = 64;
+    uint8 private constant maxWidth = 64;
+    uint8 private constant maxHeight = 64;
     uint8 public royaltyRate = 50; // rate per 1'000
     uint public constant royaltyDenominator = 1000;
-    uint public constant ARTISTIC_PERIOD = 3 days;
-    uint public constant VOTING_PERIOD = 1 days;
+    uint private constant ARTISTIC_PERIOD = 3 days;
+    uint private constant VOTING_PERIOD = 1 days;
     uint public constant CYCLE_PERIOD = ARTISTIC_PERIOD + VOTING_PERIOD;
     uint public constant AUCTION_DURATION = 18 hours;
-    uint public canvasCreation;
-    uint public constant royaltyAskPeriod = 3 days;
+    uint private canvasCreation;
+    uint private constant royaltyAskPeriod = 3 days;
     uint private constant PIXEL_WIDTH_HEIGHT = 8;
 
     /// royalties are paid with wrapped ETH
@@ -37,11 +37,11 @@ contract Pixelmap is ReentrancyGuard {
     struct Pixel {
         address owner;
         uint8 shapeID;
-        uint price;
-        string color;
-        uint royaltyLastPaid;
         bool askedToPayRoyalties;
+        uint price;
+        uint royaltyLastPaid;
         uint royaltyAskDate;
+        string color;
     }
 
     struct Vote {
@@ -64,8 +64,8 @@ contract Pixelmap is ReentrancyGuard {
     
     /// The window is a map that fits "width -> (height -> pixel)"
     mapping (uint8 => mapping (uint8 => Pixel)) public window;
-    string[4096] public pixelSVGs;
-    string[64] public rowSVGs;
+    string[4096] private pixelSVGs;
+    string[64] private rowSVGs;
     /// Balance mapping of owner address to number of pixels owned
     mapping (address => uint) public balanceOf;
     /// mapping of period id to Vote
@@ -74,7 +74,6 @@ contract Pixelmap is ReentrancyGuard {
     mapping (uint => uint) public mintDates;
     /// mapping tokenID to Auction
     mapping (uint => Auction) public nftAuctions;
-    /// mapping tokenID to address to with
 
 
     /// ================================================================================
@@ -128,7 +127,7 @@ contract Pixelmap is ReentrancyGuard {
         uint length = _pixels.length;
         bool[] memory uniqueRows = new bool[](64);
         
-        for (uint i=0; i < length; i++){
+        for (uint i; i < length;){
             (uint8 _x, uint8 _y, uint8 _shape, string memory _color) = abi.decode(_pixels[i], (uint8, uint8, uint8, string));
             if (isOutOfBound(_x,_y)) {
                 revert('pixel is out of bounds');
@@ -147,12 +146,13 @@ contract Pixelmap is ReentrancyGuard {
                 emit PixelFilled (_x,_y);
     
             }
+            unchecked{ ++i;}
         }
-        for(uint8 row = 0; row < 64;){
+        for(uint8 row; row < 64;){
             if(uniqueRows[row]){
                 rowSVGs[row] = generateSVGRow(row);
             }
-            unchecked{row++;}
+            unchecked{++row;}
         }
     }
 
@@ -161,19 +161,19 @@ contract Pixelmap is ReentrancyGuard {
         require(xValues.length == yValues.length && xValues.length == priceValues.length, 'input arrays must be of the same length');
         
         uint length = xValues.length;
-        for (uint i = 0; i < length;) {
+        for (uint i; i < length;) {
             require(!isOutOfBound(xValues[i], yValues[i]), 'A pixel is out of bounds');
             require(window[xValues[i]][yValues[i]].owner == msg.sender, 'only owner can set pixel value');
-            unchecked{i++;}
+            unchecked{++i;}
         }
         
         // Pay royalties for all pixels at once based on previous values
         payRoyalties(xValues, yValues);
         // set new pixel values
-        for (uint i = 0; i < length;) {
+        for (uint i; i < length;) {
             window[xValues[i]][yValues[i]].price = priceValues[i];
             emit PixelValueSet (xValues[i],yValues[i]);
-            unchecked{i++;}
+            unchecked{++i;}
         }
     }
 
@@ -182,7 +182,7 @@ contract Pixelmap is ReentrancyGuard {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
-        for (uint i = 0; i < length; i++){
+        for (uint i; i < length;){
             if (isOutOfBound(xValues[i],yValues[i])) {
                 revert('pixel is out of bounds');
             }
@@ -202,6 +202,7 @@ contract Pixelmap is ReentrancyGuard {
                 }
                 emit RoyaltiesPaid (xValues[i], yValues[i]);
             }
+            unchecked{++i;}
         }
     }
 
@@ -209,7 +210,7 @@ contract Pixelmap is ReentrancyGuard {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         
         uint length = xValues.length;
-        for (uint i = 0; i < length; ){
+        for (uint i; i < length; ){
             if (isOutOfBound(xValues[i],yValues[i])) {
                 revert('pixel is out of bounds');
             }
@@ -239,7 +240,7 @@ contract Pixelmap is ReentrancyGuard {
                 }   
             }
             emit PixelBought (xValues[i],yValues[i]);
-            unchecked{i++;}
+            unchecked{++i;}
         }
     }
 
@@ -261,16 +262,14 @@ contract Pixelmap is ReentrancyGuard {
         return window[x][y];
     }
 
-    function checkMultiplePixel (uint8[] calldata xValues, uint8[] calldata yValues) external view returns(Pixel[] memory) {
+    function checkMultiplePixel (uint8[] calldata xValues, uint8[] calldata yValues) external view returns(Pixel[] memory results) {
         require(xValues.length == yValues.length, 'x and y input arrays are of various lengths');
         uint length = xValues.length;
-        Pixel[] memory results = new Pixel[](length);
+        results = new Pixel[](length);
 
-        for (uint i = 0; i < length;){
+        for (uint i; i < length;){
             results[i] = checkPixel(xValues[i], yValues[i]);
-            unchecked {
-                i++;
-            }
+            unchecked {++i;}
         }
         return results;
     }
@@ -360,13 +359,13 @@ contract Pixelmap is ReentrancyGuard {
             emit AuctionEnded(_tokenID, nftAuctions[_tokenID].winningAddr, nftAuctions[_tokenID].winningBid);
         }
 
-        for (uint8 x = 0; x < 64;) {
-            for (uint8 y = 0; y < 64;) {
+        for (uint8 x; x < 64;) {
+            for (uint8 y; y < 64;) {
                 address owner = window[x][y].owner;
                 auctionClaims[_tokenID][owner] = balanceOf[owner];
-                unchecked{y++;}
+                unchecked{++y;}
             }
-            unchecked{x++;}
+            unchecked{++x;}
         }
     }
 
@@ -505,24 +504,26 @@ contract Pixelmap is ReentrancyGuard {
     }
 
     // Function to generate SVG for 1 row by combining single pixel SVGs
-    function generateSVGRow(uint _row) internal view returns (string memory) {
-        string memory svgString = '';
+    function generateSVGRow(uint _row) internal view returns (string memory svgString) {
+        svgString = '';
         
         uint startID = 64 * _row;
         uint endID = 64 + startID;
 
-        for (uint i = startID; i < endID; i++) {
+        for (uint i = startID; i < endID;) {
             svgString = string(abi.encodePacked(svgString, pixelSVGs[i]));
+            unchecked{++i;}
         }
         return svgString;
     }
 
     // Function to generate the complete SVG grid based on single row SVGs
-    function generateSVG() public view returns (string memory) {
-        string memory svgString = '<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">';
+    function generateSVG() public view returns (string memory svgString) {
+        svgString = '<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">';
         
-        for (uint8 i = 0; i < 64; i++) {
+        for (uint8 i; i < 64;) {
             svgString = string(abi.encodePacked(svgString, rowSVGs[i]));
+            unchecked{++i;}
         }
 
         svgString = string(abi.encodePacked(svgString, '</svg>'));
@@ -537,7 +538,7 @@ contract Pixelmap is ReentrancyGuard {
         uint j = _i;
         uint len;
         while (j != 0) {
-            len++;
+            ++len;
             j /= 10;
         }
         bytes memory bstr = new bytes(len);
@@ -554,13 +555,13 @@ contract Pixelmap is ReentrancyGuard {
 
     function generateMerkle () external view returns (bytes32) {
         bytes32[] memory data = new bytes32[](4096);
-        for (uint y = 0; y < 64;){
-            for(uint x = 0; x < 64;){
+        for (uint y; y < 64;){
+            for(uint x; x < 64;){
                 uint256 pixelID = x + 64 * y;
                 data[pixelID] = bytes32(uint256(uint160(window[uint8(x)][uint8(y)].owner)) << 96);
-                unchecked{x++;}
+                unchecked{++x;}
             }
-            unchecked{y++;}
+            unchecked{++y;}
         }
         return artistMerkle.getRoot(data);
     }

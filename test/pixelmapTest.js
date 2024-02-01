@@ -73,13 +73,13 @@ describe('PixelMap', function () {
 
     await contract.connect(buyer).buyPixel([x1, x2, x3], [y1, y2, y3]);
     await contract.connect(buyer).fillPixel(inputArray);
-    const [owner1, shapeR1, price1, returnedColor1] = await contract.checkPixel(1, 1);
-    const [owner2, shapeR2, price2, returnedColor2] = await contract.checkPixel(2, 2);
-    const [owner3, shapeR3, price3, returnedColor3] = await contract.checkPixel(3, 3);
+    const [owner1, shapeR1, askedRoyalties1 ,price1,dateX1,dateY1, returnedColor1] = await contract.checkPixel(1, 1);
+    const [owner2, shapeR2, askedRoyalties2 ,price2,dateX2,dateY2, returnedColor2] = await contract.checkPixel(2, 2);
+    const [owner3, shapeR3, askedRoyalties3 ,price3,dateX3,dateY3, returnedColor3] = await contract.checkPixel(3, 3);
     expect(owner1).to.equal(buyer.address);
     expect(owner2).to.equal(buyer.address);
     expect(owner3).to.equal(buyer.address);
-
+  
     expect(returnedColor1).to.equal(color1);
     expect(returnedColor2).to.equal(color2);
     expect(returnedColor3).to.equal(color3);
@@ -94,7 +94,7 @@ describe('PixelMap', function () {
     let y = 1;
     
     await contract.connect(buyer).buyPixel([x], [y]);
-    const [owner1, shape1, price1, returnedColor1] = await contract.checkPixel(x, y);
+    const [owner1, shapeR1, askedRoyalties1 ,price1,dateX1,dateY1, returnedColor1] = await contract.checkPixel(x, y);
     expect(owner1).to.equal(buyer.address);
     
     let color = '#FF0000';
@@ -102,14 +102,14 @@ describe('PixelMap', function () {
     let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x, y, 3, color]);
     await contract.connect(buyer).fillPixel([input]);
     await contract.connect(buyer).setPixelValue([x],[y],[askPrice]);
-    const [owner2, shape2, price2, returnedColor2] = await contract.checkPixel(x, y);
+    const [owner2, shapeR2, askedRoyalties2 ,price2,dateX2,dateY2, returnedColor2] = await contract.checkPixel(x, y);
     expect(returnedColor2).to.equal(color);
     expect(price2).to.equal(ethers.parseEther('0.05'));
 
     await wETH.connect(owner).approve(contractAddr, ethers.parseEther('0.05').toString());
 
     await contract.connect(owner).buyPixel([x], [y]);
-    const [owner3, shape3, price3, returnedColor3] = await contract.checkPixel(x, y);
+    const [owner3, shapeR3, askedRoyalties3 ,price3,dateX3,dateY3, returnedColor3] = await contract.checkPixel(x, y);
     expect(owner3).to.equal(owner.address);
     let balance1 = await contract.getBalance(buyer.address);
     let balance2 = await contract.getBalance(owner.address);
@@ -123,7 +123,7 @@ describe('PixelMap', function () {
     let y = 1;
     
     await contract.connect(buyer).buyPixel([x], [y]);
-    const [owner1, shape1, price1, returnedColor1] = await contract.checkPixel(x, y);
+    const [owner1, shapeR1, askedRoyalties1 ,price1,dateX1,dateY1, returnedColor1] = await contract.checkPixel(x, y);
     expect(owner1).to.equal(buyer.address);
     
     let color = '#FF0000';
@@ -131,7 +131,7 @@ describe('PixelMap', function () {
     let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x, y, 3, color]);
     await contract.connect(buyer).fillPixel([input]);
     await contract.connect(buyer).setPixelValue([x],[y],[askPrice]);
-    const [owner2, shape2, price2, returnedColor2] = await contract.checkPixel(x, y);
+    const [owner2, shapeR2, askedRoyalties2 ,price2,dateX2,dateY2, returnedColor2] = await contract.checkPixel(x, y);
     expect(returnedColor2).to.equal(color);
     expect(price2).to.equal(ethers.parseEther('100'));
 
@@ -152,7 +152,7 @@ describe('PixelMap', function () {
     let y2 = 2;
     
     await contract.connect(buyer).buyPixel([x, x2], [y, y2]);
-    const [[owner1, price1, returnedColor1],[owner2, price2, returnedColor2]] = await contract.checkMultiplePixel([x, x2], [y, y2]);
+    const [[owner1, shapeR1, askedRoyalties1 ,price1,dateX1,dateY1, returnedColor1],[owner2, shapeR2, askedRoyalties2 ,price2,dateX2,dateY2, returnedColor2]] = await contract.checkMultiplePixel([x, x2], [y, y2]);
     expect(owner1).to.equal(buyer.address);
     expect(owner2).to.equal(buyer.address);
     
@@ -161,7 +161,7 @@ describe('PixelMap', function () {
     let input = ethers.AbiCoder.defaultAbiCoder().encode(["uint8", "uint8", "uint8", "string"], [x, y, 3, color]);
     await contract.connect(buyer).fillPixel([input]);
     await contract.connect(buyer).setPixelValue([x],[y],[askPrice]);
-    const [owner3, shape3, price3, returnedColor3] = await contract.checkPixel(x, y);
+    const [owner3, shapeR3, askedRoyalties3 ,price3,dateX3,dateY3, returnedColor3] = await contract.checkPixel(x, y);
     expect(returnedColor3).to.equal(color);
     expect(price3).to.equal(ethers.parseEther('50'));
 
