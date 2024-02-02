@@ -5,6 +5,7 @@ import { createShape } from '../assets/gridShapes';
 import { useAccount } from 'wagmi'
 import { motion } from 'framer-motion'
 
+
 const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
@@ -256,7 +257,8 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, priceFilterFlag, pric
             duration: 1
         }
     }:{};
-    
+
+
     return (
         <div className='flex flex-col items-center'>
             <GeneralInfo pixels={grid} />

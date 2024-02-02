@@ -17,6 +17,18 @@ const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
 
+const SuccessModal = ({ message, isOpen, onClose }) => {
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 bg-white bg-opacity-30 flex justify-center items-center">
+        <div className="bg-black text-white font-connection text-sm p-6 shadow-x">
+          <p>{message}</p>
+        </div>
+      </div>
+    );
+  };
+
 function useWindowSize() {
     const [windowSize, setWindowSize] = useState({
       width: undefined,
@@ -151,6 +163,7 @@ const Canvas = ({ setInitialLoading }) => {
     const [toggleMobilePortfolio, setToggleMobilePortfolio] = useState(false);
     const [priceFilterFlag, setPriceFilterFlag] = useState(false);
     const [priceFilterValue, setPriceFilterValue] = useState('');
+    const [successModalOpen, setSuccessModalOpen] = useState(false);
     
     const handleCloseMobileSideBar = () => {
         setToggleMobileSideBar(false);
@@ -251,7 +264,12 @@ const Canvas = ({ setInitialLoading }) => {
         );
         if (!isPixelSelected && selectedPixels.length < 32) {
             setSelectedPixels([...selectedPixels, pixel]);
+            setSuccessModalOpen(true);
         }
+        
+        setTimeout(() => {
+            setSuccessModalOpen(false);
+        }, 1000);
     };
 
     const addDragSelectedPixels = (newPixels) => {
@@ -441,6 +459,11 @@ const Canvas = ({ setInitialLoading }) => {
                             </svg>    
                         </button>
                     </div>
+                    <SuccessModal
+                        isOpen={successModalOpen}
+                        message="Pixel added to selection!"
+                        onClose={() => setSuccessModalOpen(false)}
+                    />
                     {selectedPixels.length >0 && (
                     <>
                         <AnimatePresence>
