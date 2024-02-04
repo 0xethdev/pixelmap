@@ -1,2 +1,2 @@
-const currencyAddr = '0x559010fC2CC7656940056F4fc590F30B69B398Ba'
+const currencyAddr = '0x2619844Df08c89262f05f5F975e617675DFe9De2'
 export default currencyAddr

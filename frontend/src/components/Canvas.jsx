@@ -84,7 +84,7 @@ const MobileArtGrid = ({grid, priceFilterFlag, priceFilterValue, setMobileHighli
                 {grid.map((pixel, i) => {
                     const x = (i % 64) * (squareSize + gap)+4; 
                     const y = Math.floor(i / 64) * (squareSize + gap)+4;
-                    const isDimmed = priceFilterFlag && pixel.price > priceFilterValue;
+                    const isDimmed = priceFilterFlag && Utils.formatEther(pixel.price.toString()) > priceFilterValue;
                     
                 return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, null, handlePixelSelection, null, null, isDimmed);
             })}

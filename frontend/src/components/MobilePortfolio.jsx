@@ -113,6 +113,7 @@ const MobilePortfolio = ({isOpen, onClose }) => {
     const [setPixelData, toggleSetPixelData] = useState(false);
     const [tempPixelData, setTempPixelData] = useState([]);
     const [pixelColorIndex, setPixelColorIndex] = useState(0);
+    const [error, setError] = useState('');
 
     const handlePixelSelectionLeft = () => {
         const currentIndex = selectedPixelIndex;
@@ -295,6 +296,9 @@ const MobilePortfolio = ({isOpen, onClose }) => {
             const changedPixels = userPixels.filter((pixels, index) => includeInUpdate[index]);
             setUpdatedPixels(changedPixels.map(pixel => ({ x: pixel.x, y: pixel.y })));
             handlePixelModification();
+        },
+        onError(e){
+            console.log(e)
         }
     });
     async function handlePixelFill() {
@@ -306,6 +310,7 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                     ["uint256", "uint256","uint256", "string"], [userPixels[i].x, userPixels[i].y, selectedShape[i], selectedColor[i]]));
             }
         }
+        setError(inputArray)
         await fillPixel({ args: [inputArray] });
     }
 
@@ -706,6 +711,11 @@ const MobilePortfolio = ({isOpen, onClose }) => {
                     onSelect={onColorSelect}
                     bgColor={'bg-offblack'}
                 />
+                <div>
+                    
+                    <pre>{JSON.stringify(error, null, 2)}</pre>
+                    
+                </div>
             </>
                 )}
         </div>

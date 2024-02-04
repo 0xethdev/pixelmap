@@ -17,7 +17,7 @@ describe('PixelMap', function () {
   beforeEach(async () => {
     [owner, buyer, manager, thirdP] = await ethers.getSigners();
 
-    const WETH = await ethers.getContractFactory('WETH');
+    const WETH = await ethers.getContractFactory('WETH9');
     wETH = await WETH.deploy();
     weETHadd = await wETH.getAddress();
 
@@ -32,9 +32,9 @@ describe('PixelMap', function () {
 
     // give every test player sufficient currency to start with
     let initialMint = ethers.parseEther('10').toString();
-    await wETH.mint(owner, initialMint);
-    await wETH.mint(buyer, initialMint);
-    await wETH.mint(thirdP, initialMint);
+    await wETH.connect(owner).deposit({value:initialMint});
+    await wETH.connect(buyer).deposit({value:initialMint});
+    await wETH.connect(thirdP).deposit({value:initialMint});
     // set contract currency to test currency
     await contract.connect(manager).updateCurrency(weETHadd);
 

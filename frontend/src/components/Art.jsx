@@ -315,7 +315,7 @@ const ArtisticGrid = React.memo(({ grid, handlePixelClick, priceFilterFlag, pric
                             isDimmed = !isWithinDragRange;
                         } else {
                             // Apply filter if active when not dragging
-                            isDimmed = isConnected && filterActive && !isOwnedByUser || priceFilterFlag && pixel.price > priceFilterValue;
+                            isDimmed = isConnected && filterActive && !isOwnedByUser || priceFilterFlag && Utils.formatEther(pixel.price.toString()) > priceFilterValue;
                         }
 
                         return createShape(i, Number(pixel.shapeID), squareSize, squareSize, x, y, pixel.color, pixel, handleMouseOver, handlePixelClick, handleMouseDown, handleMouseUp, isDimmed);

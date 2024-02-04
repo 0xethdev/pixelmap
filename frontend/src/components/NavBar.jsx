@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { UserBalanceContext } from './UserBalanceContext';
 import currencyAddr from '../hooks/currencyAddr';
 import { Utils } from "alchemy-sdk"
+import { TwitterShareButton } from "react-share";
 
 const wETH_ABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"},{"name":"wad","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"src","type":"address"},{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"wad","type":"uint256"}],"name":"withdraw","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"deposit","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"guy","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Withdrawal","type":"event"}];
 
@@ -196,6 +197,17 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
                                     selectedPage={selectedPage}
                                     setSelectedPage={setSelectedPage} />
                             </ NavLink>
+                            
+                            <TwitterShareButton
+                                className='text-darkgrey hover:text-white border-darkgrey hover:border-white py-0 px-1 w-[150px] h-[27px] border-b-2 font-connection transition duration-300 ease-in-out'
+                                title="You should check out @mosaix, it's an awesome and innovative take on the original pixel map. I have just purchased some pixels! Sooo ready to start making some art together 🔥🔥"
+                                url="mosaix.xyz"
+                            >
+                                <button className='flex flex-row justify-between items-center text-darkgrey hover:text-white border-darkgrey hover:border-white py-0 px-1 w-[150px] h-[27px] border-b-2 font-connection transition duration-300 ease-in-out'>
+                                    Invite Friends
+                                    <svg className='w-[16px]' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M4 11v2h12v2h2v-2h2v-2h-2V9h-2v2H4zm10-4h2v2h-2V7zm0 0h-2V5h2v2zm0 10h2v-2h-2v2zm0 0h-2v2h2v-2z" fill="currentColor"/> </svg>
+                                </button>
+                            </TwitterShareButton>
                             < ConnectButton />
                         </div>
                     </div>
@@ -209,10 +221,20 @@ const NavBar = ({ selectedPage, setSelectedPage, isInitialLoading }) => {
                             </button>
                         </div>
                         <div className="flex flex-col items-center justify-center h-[80%]">
-                            <NavLink to="/" className={`py-2 text-center text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'Canvas' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('Canvas'); toggleMenu(); }}>Canvas</NavLink>
-                            <NavLink to="/Info" className={`py-2 text-center text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'Info' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('Info'); toggleMenu(); }}>Info</NavLink>
-                            <NavLink to="/FAQ" className={`py-2 text-center text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'FAQ' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('FAQ'); toggleMenu(); }}>FAQ</NavLink>
-                            <NavLink to="/Mint" className={`py-2 text-center text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'Mint' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('Mint'); toggleMenu(); }}>Mint</NavLink>
+                            <NavLink to="/" className={`py-2 text-start pl-8 text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'Canvas' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('Canvas'); toggleMenu(); }}>Canvas</NavLink>
+                            <NavLink to="/Info" className={`py-2 text-start pl-8 text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'Info' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('Info'); toggleMenu(); }}>Info</NavLink>
+                            <NavLink to="/FAQ" className={`py-2 text-start pl-8 text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'FAQ' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('FAQ'); toggleMenu(); }}>FAQ</NavLink>
+                            <NavLink to="/Mint" className={`py-2 text-start pl-8 text-3xl mb-3 border-b-2 border-darkgrey w-full ${selectedPage === 'Mint' ? 'text-darkgrey' : 'text-white'}`} onClick={() => { setSelectedPage('Mint'); toggleMenu(); }}>Mint</NavLink>
+                            <TwitterShareButton
+                                className='flex flex-row text-start pl-8 justify-between items-center py-2 text-3xl mb-3 border-b-2 border-darkgrey w-full text-white'
+                                title="You should check out @mosaix, it's an awesome and innovative take on the original pixel map. I have just purchased some pixels! Sooo ready to start making some art together 🔥🔥"
+                                url="mosaix.xyz"
+                            >
+                                <button className='flex flex-row text-start pl-8 justify-between items-center py-2 text-3xl mb-3 border-b-2 border-darkgrey w-full text-white'>
+                                    Invite Friends
+                                    <svg className='w-[36px]' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M4 11v2h12v2h2v-2h2v-2h-2V9h-2v2H4zm10-4h2v2h-2V7zm0 0h-2V5h2v2zm0 10h2v-2h-2v2zm0 0h-2v2h2v-2z" fill="currentColor"/> </svg>
+                                </button>
+                            </TwitterShareButton>
                         </div>
                     </div>
                 )}

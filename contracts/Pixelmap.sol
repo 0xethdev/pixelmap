@@ -138,7 +138,7 @@ contract Pixelmap is ReentrancyGuard {
                 window[_x][_y].color = _color;
                 window[_x][_y].shapeID = _shape;
 
-                uint pixelID = _x + maxWidth * _y;
+                uint256 pixelID = _x + maxWidth * _y;
                 
                 pixelSVGs[pixelID] = generateShapeSVG(window[_x][_y].shapeID, _x * 9, _y * 9, window[_x][_y].color);
                 uniqueRows[_y] = true;

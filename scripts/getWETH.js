@@ -19,7 +19,7 @@ async function main() {
     console.log(response);
     //console.log(response2);
 
-    const pixelmap = new ethers.Contract('0x11075Bdf689B98d941Cb4c1b1C21Bb4F8f3de3f1', Pixelmap.abi, mainAcct);
+    const pixelmap = new ethers.Contract('0x94F1382b0F0A108De1cA4439D958E572942B0f6A', Pixelmap.abi, mainAcct);
     const currencyUpdate = await pixelmap.updateCurrency(wETHaddr);
     console.log(currencyUpdate.hash);
 
