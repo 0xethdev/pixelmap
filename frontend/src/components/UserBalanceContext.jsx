@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
+import { useContractEvent } from 'wagmi'
 import { fetchBalance, readContract } from '@wagmi/core';
 import contractAddr from '../hooks/contractAddr';
 import currencyAddr from '../hooks/currencyAddr';
@@ -12,8 +13,39 @@ export const UserBalanceProvider = ({ children }) => {
     const [tokenBalance, setTokenBalance] = useState('0');
     const [tokenAllowance, setAllowance] = useState('0');
     const { isConnected, address } = useAccount();
+    const [updateBalance, setUpdateBalance] = useState(false);
     const pollInterval = 60000; // Poll every 60 seconds
-    
+
+    const handleBalanceChange = (event) => {
+        if(event[0].args.src == address || event[0].args.dst == address ){
+            setUpdateBalance(true);
+        }
+    }
+
+    useContractEvent({
+        address: currencyAddr,
+        abi: wETH_ABI,
+        eventName: 'Approval',
+        listener:handleBalanceChange,
+    })
+    useContractEvent({
+        address: currencyAddr,
+        abi: wETH_ABI,
+        eventName: 'Transfer',
+        listener:handleBalanceChange,
+    })
+    useContractEvent({
+        address: currencyAddr,
+        abi: wETH_ABI,
+        eventName: 'Deposit',
+        listener:handleBalanceChange,
+    })
+    useContractEvent({
+        address: currencyAddr,
+        abi: wETH_ABI,
+        eventName: 'Withdrawal',
+        listener:handleBalanceChange,
+    })
     
     const fetchData = useCallback(async () => {
         const tokenResponse = await fetchBalance({
@@ -38,9 +70,13 @@ export const UserBalanceProvider = ({ children }) => {
             fetchData();
             interval = setInterval(fetchData, pollInterval);
         }
+        if(updateBalance){
+            setUpdateBalance(false);
+            fetchData();
+        }
 
         return () => clearInterval(interval);
-    }, [address, isConnected, tokenBalance, tokenAllowance]);
+    }, [address, isConnected, tokenBalance, tokenAllowance, updateBalance]);
 
     return (
         <UserBalanceContext.Provider value={{ tokenBalance, tokenAllowance, refreshBalanceData:fetchData }}>
